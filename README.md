@@ -1,1 +1,1 @@
-# grocery-price-checkers
+# grocery-price-checker
