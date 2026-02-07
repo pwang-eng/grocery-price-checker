@@ -507,7 +507,6 @@ with tab5:
                     )
                     st.toast(f"Saved '{st.session_state.recipe_tab5}' to Recipe Book!")
 
-
 # ---- TAB 6: BROWSE DB ----
 with tab6:
     st.subheader("Product Database")
@@ -516,8 +515,20 @@ with tab6:
         search = st.text_input("Search Database", placeholder="Product name...", key="db_search")
         if search:
             products_df = products_df[products_df["product_name"].str.contains(search, case=False)]
-        st.dataframe(products_df[["product_name", "category", "no_frills_price", "walmart_price"]],
-                     use_container_width=True)
+
+        # Display all store columns
+        st.dataframe(
+            products_df[[
+                "product_name",
+                "category",
+                "no_frills_price",
+                "food_basics_price",
+                "walmart_price",
+                "freshco_price",
+                "loblaws_price"
+            ]],
+            use_container_width=True
+        )
 
 # ---- TAB 7: RECIPE BOOK ----
 with tab7:
