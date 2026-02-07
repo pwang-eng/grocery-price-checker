@@ -110,46 +110,95 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
 
 # ---- TAB 1: HOME / ABOUT ----
 with tab1:
-    st.markdown(f"""
-        <div style='text-align: center; padding-top: 50px; padding-bottom: 20px;'>
+
+    # Optional vertical centering for columns
+    st.markdown("""
+    <style>
+    [data-testid="column"] {
+        display: flex;
+        align-items: center;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Logo + Title Row
+    col_logo, col_title = st.columns([1, 5])
+
+    with col_logo:
+        st.image("branding/Big Logo.png", width=250)
+
+    with col_title:
+        st.markdown(f"""
             <h1 style='font-size: 80px; margin-bottom: 0;'>
-                <span style='color: white;'>Goose</span> <span style='color: {GOOSE_GREEN};'>Grocer</span>
+                <span style='color: white;'>Goose</span>
+                <span style='color: {GOOSE_GREEN};'>Grocer</span>
             </h1>
+
             <h3 style='font-weight: 300; margin-top: 10px; font-style: italic; opacity: 0.8;'>
-                <span style='color: white;'>Stop spending.</span> <span style='color: {GOOSE_GREEN};'>Start saving.</span>
+                <span style='color: white;'>Stop spending.</span>
+                <span style='color: {GOOSE_GREEN};'>Start saving.</span>
             </h3>
-        </div>
         """, unsafe_allow_html=True)
 
     st.divider()
 
+    # Mission + Insight
     col_mission, col_why = st.columns([2, 1])
+
     with col_mission:
-        st.markdown(f"""
+        st.markdown("""
         ### Our Mission
+
         **Grocery shopping takes time, and time is money.**
 
-        Goose Grocer streamlines the grocery experience, making buying local, affordable groceries 
-        as efficient as ordering delivery. Our platform instantly compares prices across major 
-        retailers to optimize your spending without the manual effort.
-        """)
-    with col_why:
-        st.info("**Insight:** Users save an average of 30% on weekly grocery bills through automated price comparison.")
+        Goose Grocer streamlines the grocery experience, making buying local, 
+        affordable groceries as efficient as ordering delivery.
 
+        Our platform instantly compares prices across major retailers to 
+        optimize your spending without the manual effort.
+        """)
+
+    with col_why:
+        st.info(
+            "**Insight:** Users save an average of 30% on weekly grocery bills "
+            "through automated price comparison."
+        )
+
+    st.divider()
+
+    # Features Section
     st.markdown("### Platform Features")
+
     c1, c2, c3, c4 = st.columns(4)
+
     with c1:
-        st.markdown(f"<h4 style='color:{GOOSE_GREEN}'>Smart List</h4>", unsafe_allow_html=True)
+        st.markdown(
+            f"<h4 style='color:{GOOSE_GREEN}'>Smart List</h4>",
+            unsafe_allow_html=True
+        )
         st.caption("Automated price matching for your custom grocery list.")
+
     with c2:
-        st.markdown(f"<h4 style='color:{GOOSE_GREEN}'>Meal Planner</h4>", unsafe_allow_html=True)
+        st.markdown(
+            f"<h4 style='color:{GOOSE_GREEN}'>Meal Planner</h4>",
+            unsafe_allow_html=True
+        )
         st.caption("Generate ingredient lists from simple meal descriptions.")
+
     with c3:
-        st.markdown(f"<h4 style='color:{GOOSE_GREEN}'>Weekly Schedule</h4>", unsafe_allow_html=True)
+        st.markdown(
+            f"<h4 style='color:{GOOSE_GREEN}'>Weekly Schedule</h4>",
+            unsafe_allow_html=True
+        )
         st.caption("Full-week meal planning and consolidated shopping lists.")
+
     with c4:
-        st.markdown(f"<h4 style='color:{GOOSE_GREEN}'>Bulk Prep</h4>", unsafe_allow_html=True)
+        st.markdown(
+            f"<h4 style='color:{GOOSE_GREEN}'>Bulk Prep</h4>",
+            unsafe_allow_html=True
+        )
         st.caption("Cost analysis for batch cooking and meal preparation.")
+
 
 # ---- TAB 2: GROCERY LIST ----
 with tab2:
