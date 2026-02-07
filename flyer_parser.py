@@ -45,15 +45,15 @@ def setup_gemini():
     api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key or api_key == "your_gemini_api_key_here":
-        print("❌ Error: No Gemini API key found!")
+        print("Error: No Gemini API key found!")
         print("   1. Go to https://aistudio.google.com/apikey")
         print("   2. Create an API key")
         print("   3. Add it to your .env file: GEMINI_API_KEY=your_key")
         sys.exit(1)
 
     genai.configure(api_key=api_key)
-    # Use gemini-2.0-flash for vision tasks (fast + free tier friendly)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    # Use gemini-3-flash-preview for vision tasks (fast + free tier friendly)
+    model = genai.GenerativeModel("gemini-3-flash-preview")
     return model
 
 
@@ -89,7 +89,7 @@ def parse_flyer_image(image_path, store_name):
 
     # Open the image using PIL (Python Imaging Library)
     if not os.path.exists(image_path):
-        print(f"❌ Error: Image not found at {image_path}")
+        print(f"Error: Image not found at {image_path}")
         return []
 
     image = Image.open(image_path)
@@ -126,7 +126,7 @@ def parse_flyer_image(image_path, store_name):
     """
 
     # Send the image + prompt to Gemini
-    print(f"🔍 Analyzing flyer image: {image_path}")
+    print(f"Analyzing flyer image: {image_path}")
     print(f"   Store: {store_name}")
 
     try:
@@ -143,16 +143,16 @@ def parse_flyer_image(image_path, store_name):
         # Parse the JSON
         deals = json.loads(response_text)
 
-        print(f"✅ Found {len(deals)} products!")
+        print(f"Found {len(deals)} products!")
         return deals
 
     except json.JSONDecodeError as e:
-        print(f"❌ Error: Gemini returned invalid JSON")
+        print(f"Error: Gemini returned invalid JSON")
         print(f"   Raw response: {response_text[:500]}")
         print(f"   Error: {e}")
         return []
     except Exception as e:
-        print(f"❌ Error calling Gemini API: {e}")
+        print(f"Error calling Gemini API: {e}")
         return []
 
 
@@ -177,15 +177,15 @@ def save_deals_to_database(deals, store_name, flyer_source=None):
             )
             saved_count += 1
         except Exception as e:
-            print(f"   ⚠️  Could not save '{deal.get('product_name', 'unknown')}': {e}")
+            print(f"   Could not save '{deal.get('product_name', 'unknown')}': {e}")
 
-    print(f"💾 Saved {saved_count}/{len(deals)} deals to database")
+    print(f"Saved {saved_count}/{len(deals)} deals to database")
 
 
 def print_deals(deals, store_name):
     """Pretty-prints the extracted deals to the terminal."""
     print(f"\n{'='*60}")
-    print(f"  📋 {store_name} Flyer Deals")
+    print(f"  {store_name} Flyer Deals")
     print(f"{'='*60}")
 
     for deal in deals:
@@ -232,6 +232,6 @@ if __name__ == "__main__":
         save = input("Save these deals to the database? (y/n): ").strip().lower()
         if save == "y":
             save_deals_to_database(deals, store_name, flyer_source=image_path)
-            print("✅ Done!")
+            print("Done!")
     else:
         print("No deals found. Try a clearer/closer image of the flyer.")

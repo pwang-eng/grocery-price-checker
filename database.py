@@ -96,7 +96,7 @@ def setup_database():
 
     conn.commit()
     conn.close()
-    print("✅ Database tables created successfully!")
+    print("Database tables created successfully!")
 
 
 def load_seed_data():
@@ -109,7 +109,7 @@ def load_seed_data():
     csv_path = os.path.join("data", "seed_prices.csv")
 
     if not os.path.exists(csv_path):
-        print(f"❌ Error: Could not find {csv_path}")
+        print(f"Error: Could not find {csv_path}")
         print("   Make sure you're running this from the project root folder.")
         return
 
@@ -128,7 +128,7 @@ def load_seed_data():
     conn.commit()
     conn.close()
 
-    print(f"✅ Loaded {len(df)} products into the database!")
+    print(f"Loaded {len(df)} products into the database!")
 
 
 def add_flyer_deal(product_name, store, sale_price, regular_price=None,
@@ -205,7 +205,7 @@ def search_products(query):
 # MAIN - Run this file directly to set up the database
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    print("🛒 Setting up GrocerAI database...")
+    print("Setting up Grocery Goose database...")
     print("-" * 40)
     setup_database()
     load_seed_data()
@@ -213,12 +213,12 @@ if __name__ == "__main__":
 
     # Quick test: show what's in the database
     df = get_all_products()
-    print(f"\n📊 Database contains {len(df)} products")
+    print(f"\nDatabase contains {len(df)} products")
     print(f"   Categories: {', '.join(df['category'].unique())}")
-    print(f"\n🔍 Sample search for 'chicken':")
+    print(f"\nSample search for 'chicken':")
     results = search_products("chicken")
     for _, row in results.iterrows():
         print(f"   {row['product_name']} ({row['brand']}) - "
               f"No Frills: ${row['no_frills_price']:.2f}, "
               f"Walmart: ${row['walmart_price']:.2f}")
-    print("\n✅ Database is ready! You can now run the app with: streamlit run app.py")
+    print("\nDatabase is ready! You can now run the app with: streamlit run app.py")

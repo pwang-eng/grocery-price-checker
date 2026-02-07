@@ -13,7 +13,7 @@ from flyer_parser import parse_flyer_image, save_deals_to_database
 import os
 
 
-# Brand Colors (Used for custom text highlights only)
+# Brand Colors
 GOOSE_GREEN = "#2E7D32"
 
 # Store color mapping
@@ -112,6 +112,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "Database"
 ])
 
+
 # ---- TAB 1: HOME / ABOUT ----
 with tab1:
     st.markdown(f"""
@@ -125,8 +126,6 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-
-
     st.divider()
 
     col_mission, col_why = st.columns([2, 1])
@@ -134,7 +133,7 @@ with tab1:
         st.markdown(f"""
         ### Our Mission
         **Grocery shopping takes time, and time is money.**
-
+        
         Goose Grocer streamlines the grocery experience, making buying local, affordable groceries 
         as efficient as ordering delivery. Our platform instantly compares prices across major 
         retailers to optimize your spending without the manual effort.
@@ -156,6 +155,7 @@ with tab1:
     with c4:
         st.markdown(f"<h4 style='color:{GOOSE_GREEN}'>Bulk Prep</h4>", unsafe_allow_html=True)
         st.caption("Cost analysis for batch cooking and meal preparation.")
+
 
 # ---- TAB 2: GROCERY LIST ----
 with tab2:
