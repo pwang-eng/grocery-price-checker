@@ -63,7 +63,7 @@ def fuzzy_match_items(user_items, available_products):
 
     if model is None:
         # Fallback: simple keyword matching if no API key
-        print("⚠️  No Gemini API key - using basic keyword matching")
+        print("No Gemini API key - using basic keyword matching")
         return _basic_keyword_match(user_items, available_products)
 
     prompt = f"""
@@ -95,7 +95,7 @@ def fuzzy_match_items(user_items, available_products):
         return matches
 
     except Exception as e:
-        print(f"⚠️  Gemini matching failed ({e}), falling back to keyword match")
+        print(f"Gemini matching failed ({e}), falling back to keyword match")
         return _basic_keyword_match(user_items, available_products)
 
 
@@ -142,7 +142,7 @@ def compare_prices(user_grocery_list):
     available_products = products_df["product_name"].tolist()
 
     # Step 2: Use Gemini to match user items to database products
-    print(f"🔍 Matching {len(user_grocery_list)} items...")
+    print(f"Matching {len(user_grocery_list)} items...")
     matches = fuzzy_match_items(user_grocery_list, available_products)
 
     # Step 3: Build the comparison table
@@ -229,7 +229,7 @@ def expand_meal_to_ingredients(meal_description):
     """
     model = setup_gemini()
     if model is None:
-        print("❌ Gemini API key required for meal expansion")
+        print("Gemini API key required for meal expansion")
         return []
 
     prompt = f"""
@@ -256,7 +256,7 @@ def expand_meal_to_ingredients(meal_description):
         return ingredients
 
     except Exception as e:
-        print(f"❌ Error expanding meal: {e}")
+        print(f"Error expanding meal: {e}")
         return []
 
 
@@ -267,32 +267,32 @@ def format_results_text(results):
     """
     lines = []
     lines.append(f"\n{'='*60}")
-    lines.append(f"  🛒 GROCERY PRICE COMPARISON")
+    lines.append(f"  GROCERY PRICE COMPARISON")
     lines.append(f"{'='*60}")
 
     # Item breakdown
-    lines.append(f"\n📋 Matched {results['items_matched']}/{results['items_total']} items:\n")
+    lines.append(f"\nMatched {results['items_matched']}/{results['items_total']} items:\n")
 
     for item in results["items"]:
         lines.append(f"  {item['user_input']} → {item['matched_product']}")
         for store, price in sorted(item["prices"].items(), key=lambda x: x[1]):
-            marker = " ✅" if store == item["cheapest_store"] else ""
+            marker = " [BEST]" if store == item["cheapest_store"] else ""
             lines.append(f"    {store:15s}  ${price:.2f}{marker}")
         lines.append("")
 
     # Unmatched items
     if results["unmatched"]:
-        lines.append(f"  ⚠️  Could not find: {', '.join(results['unmatched'])}\n")
+        lines.append(f"  Could not find: {', '.join(results['unmatched'])}\n")
 
     # Store totals
     lines.append(f"{'─'*60}")
-    lines.append(f"  💰 STORE TOTALS:\n")
+    lines.append(f"  STORE TOTALS:\n")
 
     for store, total in sorted(results["totals"].items(), key=lambda x: x[1]):
-        marker = " ← CHEAPEST! 🏆" if store == results["cheapest_store"] else ""
+        marker = " ← CHEAPEST!" if store == results["cheapest_store"] else ""
         lines.append(f"    {store:15s}  ${total:.2f}{marker}")
 
-    lines.append(f"\n  💵 You save ${results['potential_savings']:.2f} shopping at "
+    lines.append(f"\n  You save ${results['potential_savings']:.2f} shopping at "
                  f"{results['cheapest_store']} vs {results['most_expensive_store']}!")
     lines.append(f"{'='*60}\n")
 
@@ -303,7 +303,7 @@ def format_results_text(results):
 # MAIN - Run this file directly to test the comparison engine
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    print("🧪 Testing comparison engine...\n")
+    print("Testing comparison engine...\n")
 
     # Test with a sample grocery list
     test_list = ["milk", "eggs", "chicken breast", "bread", "bananas", "pasta", "cheese"]

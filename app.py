@@ -1,5 +1,5 @@
 """
-app.py - The Streamlit web frontend for GrocerAI.
+app.py - The Streamlit web frontend for Grocery Goose.
 
 HOW TO RUN:
     streamlit run app.py
@@ -20,8 +20,7 @@ import os
 # PAGE CONFIG - Must be the first Streamlit command
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="GrocerAI - Smart Grocery Price Comparison",
-    page_icon="🛒",
+    page_title="Grocery Goose - Smart Grocery Price Comparison",
     layout="wide"
 )
 
@@ -41,7 +40,7 @@ if "db_initialized" not in st.session_state:
 # ---------------------------------------------------------------------------
 # HEADER
 # ---------------------------------------------------------------------------
-st.title("🛒 GrocerAI")
+st.title("Grocery Goose")
 st.markdown("*Find the cheapest groceries across local stores using AI*")
 st.divider()
 
@@ -50,7 +49,7 @@ st.divider()
 # SIDEBAR - Flyer Upload
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.header("📄 Upload Store Flyers")
+    st.header("Upload Store Flyers")
     st.caption("Upload flyer screenshots to find the latest deals. "
                "Use cropped sections (4-8 items) for best results.")
 
@@ -68,7 +67,7 @@ with st.sidebar:
     if uploaded_flyer is not None:
         st.image(uploaded_flyer, caption=f"{store_name} flyer", use_container_width=True)
 
-        if st.button("🔍 Parse Flyer with AI", type="primary"):
+        if st.button("Parse Flyer with AI", type="primary"):
             # Save uploaded file temporarily
             temp_path = os.path.join("data", "flyers", uploaded_flyer.name)
             os.makedirs(os.path.join("data", "flyers"), exist_ok=True)
@@ -89,7 +88,7 @@ with st.sidebar:
                     st.write(f"• **{brand_str}{deal['product_name']}** — "
                              f"${deal['sale_price']:.2f}/{deal.get('unit', 'each')}")
 
-                if st.button("💾 Save deals to database"):
+                if st.button("Save deals to database"):
                     save_deals_to_database(deals, store_name, uploaded_flyer.name)
                     st.success("Saved!")
                     st.rerun()
@@ -101,7 +100,7 @@ with st.sidebar:
     # Show current flyer deals in database
     flyer_deals = get_flyer_deals()
     if not flyer_deals.empty:
-        st.subheader("🏷️ Active Flyer Deals")
+        st.subheader("Active Flyer Deals")
         st.caption(f"{len(flyer_deals)} deals loaded")
         for _, deal in flyer_deals.iterrows():
             st.write(f"• **{deal['product_name']}** @ {deal['store']} — ${deal['sale_price']:.2f}")
@@ -110,7 +109,7 @@ with st.sidebar:
 # ---------------------------------------------------------------------------
 # MAIN CONTENT - Two input modes
 # ---------------------------------------------------------------------------
-tab1, tab2, tab3 = st.tabs(["📝 Grocery List", "🍳 Meal Planner", "📊 Browse Database"])
+tab1, tab2, tab3 = st.tabs(["Grocery List", "Meal Planner", "Browse Database"])
 
 
 # ---- TAB 1: Direct Grocery List Input ----
@@ -125,7 +124,7 @@ with tab1:
         height=200
     )
 
-    if st.button("🔍 Compare Prices", type="primary", key="compare_list"):
+    if st.button("Compare Prices", type="primary", key="compare_list"):
         if not grocery_input.strip():
             st.warning("Please enter at least one item!")
         else:
@@ -146,19 +145,19 @@ with tab1:
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric(
-                    "🏆 Cheapest Store",
+                    "Cheapest Store",
                     results["cheapest_store"],
                     f"${results['cheapest_total']:.2f} total"
                 )
             with col2:
                 st.metric(
-                    "💰 You Save",
+                    "You Save",
                     f"${results['potential_savings']:.2f}",
                     f"vs {results['most_expensive_store']}"
                 )
             with col3:
                 st.metric(
-                    "📦 Items Matched",
+                    "Items Matched",
                     f"{results['items_matched']}/{results['items_total']}",
                 )
 
@@ -195,7 +194,7 @@ with tab1:
             # Unmatched items warning
             if results["unmatched"]:
                 st.warning(
-                    f"⚠️ Could not find matches for: {', '.join(results['unmatched'])}. "
+                    f"Could not find matches for: {', '.join(results['unmatched'])}. "
                     "These items were excluded from the comparison."
                 )
 
@@ -211,7 +210,7 @@ with tab2:
         placeholder="e.g., Tacos for 4 people, Chicken stir fry, Pasta night"
     )
 
-    if st.button("🍳 Plan & Compare", type="primary", key="compare_meal"):
+    if st.button("Plan & Compare", type="primary", key="compare_meal"):
         if not meal_input.strip():
             st.warning("Please describe a meal!")
         else:
@@ -235,19 +234,19 @@ with tab2:
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     st.metric(
-                        "🏆 Cheapest Store",
+                        "Cheapest Store",
                         results["cheapest_store"],
                         f"${results['cheapest_total']:.2f} total"
                     )
                 with col2:
                     st.metric(
-                        "💰 You Save",
+                        "You Save",
                         f"${results['potential_savings']:.2f}",
                         f"vs {results['most_expensive_store']}"
                     )
                 with col3:
                     st.metric(
-                        "📦 Items Matched",
+                        "Items Matched",
                         f"{results['items_matched']}/{results['items_total']}",
                     )
 
@@ -328,4 +327,4 @@ with tab3:
 # FOOTER
 # ---------------------------------------------------------------------------
 st.divider()
-st.caption("Built with ❤️ at CXC AI Hackathon 2026 | Powered by Gemini AI")
+st.caption("Built at CXC AI Hackathon 2026 | Powered by Gemini AI")
