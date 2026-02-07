@@ -2,12 +2,12 @@
 app.py - The Streamlit web frontend for Goose Grocer.
 
 HOW TO RUN:
-    streamlit run app.py
+    python -m streamlit run app.py
 """
 
 import streamlit as st
 import pandas as pd
-from database import setup_database, load_seed_data, get_all_products, get_flyer_deals
+from database import setup_database, load_seed_data, get_all_products, get_flyer_deals, save_recipe, get_saved_recipes
 from comparison import compare_prices, expand_meal_to_ingredients, STORE_COLUMNS
 from flyer_parser import parse_flyer_image, save_deals_to_database
 import os
@@ -98,13 +98,14 @@ with st.sidebar:
 # ---------------------------------------------------------------------------
 # MAIN NAVIGATION
 # ---------------------------------------------------------------------------
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "Home",
     "Grocery List",
     "Meal Planner",
     "Weekly Schedule",
     "Bulk Prep",
-    "Database"
+    "Database",
+    "📖 Recipe Book"
 ])
 
 # ---- TAB 1: HOME / ABOUT ----
@@ -155,6 +156,10 @@ with tab2:
     st.subheader("Smart Grocery List")
     st.caption("Enter your items below for instant price comparison.")
 
+    # Initialize Session State
+    if 'results_tab2' not in st.session_state:
+        st.session_state.results_tab2 = None
+
     st.write("Examples:")
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -183,31 +188,48 @@ with tab2:
             items = [item.strip() for item in grocery_input.replace(",", "\n").split("\n") if item.strip()]
 
             with st.spinner(f"Analyzing prices for {len(items)} items..."):
-                results = compare_prices(items)
+                st.session_state.results_tab2 = compare_prices(items)
 
-            st.divider()
+    if st.session_state.results_tab2:
+        results = st.session_state.results_tab2
+        st.divider()
 
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.markdown("### Best Value Store")
-                cheapest = results["cheapest_store"]
-                st.markdown(f"<h2 style='color: {GOOSE_GREEN};'>{cheapest}</h2>", unsafe_allow_html=True)
-                st.write(f"Total: ${results['cheapest_total']:.2f}")
-            with col2:
-                st.metric("Estimated Savings", f"${results['potential_savings']:.2f}", f"vs {results['most_expensive_store']}")
-            with col3:
-                st.metric("Items Matched", f"{results['items_matched']}/{results['items_total']}")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown("### Best Value Store")
+            cheapest = results["cheapest_store"]
+            st.markdown(f"<h2 style='color: {GOOSE_GREEN};'>{cheapest}</h2>", unsafe_allow_html=True)
+            st.write(f"Total: ${results['cheapest_total']:.2f}")
+        with col2:
+            st.metric("Estimated Savings", f"${results['potential_savings']:.2f}", f"vs {results['most_expensive_store']}")
+        with col3:
+            st.metric("Items Matched", f"{results['items_matched']}/{results['items_total']}")
 
-            st.dataframe(pd.DataFrame([{
-                "Item": i["user_input"],
-                "Product": i["matched_product"],
-                "Best Price": f"{i['cheapest_store']} (${i['cheapest_price']:.2f})"
-            } for i in results["items"]]), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame([{
+            "Item": i["user_input"],
+            "Product": i["matched_product"],
+            "Best Price": f"{i['cheapest_store']} (${i['cheapest_price']:.2f})"
+        } for i in results["items"]]), use_container_width=True, hide_index=True)
+
+        # Download Button
+        list_text = f"Goose Grocer Shopping List\nStore: {results['cheapest_store']}\nTotal: ${results['cheapest_total']:.2f}\n\nItems:\n"
+        for item in results["items"]:
+            list_text += f"- [ ] {item['matched_product']} (${item['cheapest_price']:.2f})\n"
+
+        st.download_button("📥 Download List", list_text, "grocery_list.txt")
 
 # ---- TAB 3: MEAL PLANNER ----
 with tab3:
     st.subheader("Meal Planner")
     st.caption("Describe a meal to generate a shopping list and cost estimate.")
+
+    # Session State
+    if 'results_tab3' not in st.session_state:
+        st.session_state.results_tab3 = None
+    if 'ingredients_tab3' not in st.session_state:
+        st.session_state.ingredients_tab3 = None
+    if 'meal_name_tab3' not in st.session_state:
+        st.session_state.meal_name_tab3 = ""
 
     meal_input = st.text_input("Meal Description", placeholder="e.g., Tacos for 4 people", key="meal_input")
 
@@ -215,59 +237,77 @@ with tab3:
         if meal_input:
             with st.spinner("Generating ingredient list..."):
                 ingredients = expand_meal_to_ingredients(meal_input)
+                st.session_state.ingredients_tab3 = ingredients
+                st.session_state.meal_name_tab3 = meal_input
 
             if ingredients:
-                st.success(f"List generated for: {meal_input}")
-                for ing in ingredients:
-                    st.write(f"• {ing}")
-
-                st.divider()
-
                 with st.spinner("Calculating costs..."):
-                    results = compare_prices(ingredients)
-
-                st.markdown(
-                    f"### Recommended Store: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>",
-                    unsafe_allow_html=True
-                )
-                st.write(f"Total Cost: ${results['cheapest_total']:.2f}")
-                st.caption(f"Savings: ${results['potential_savings']:.2f} vs highest price.")
+                    st.session_state.results_tab3 = compare_prices(ingredients)
             else:
                 st.error("Could not interpret meal description.")
         else:
             st.warning("Please enter a description.")
+
+    if st.session_state.results_tab3:
+        results = st.session_state.results_tab3
+        ingredients = st.session_state.ingredients_tab3
+
+        st.success(f"List generated for: {st.session_state.meal_name_tab3}")
+        for ing in ingredients:
+            st.write(f"• {ing}")
+
+        st.divider()
+
+        st.markdown(
+            f"### Recommended Store: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>",
+            unsafe_allow_html=True
+        )
+        st.write(f"Total Cost: ${results['cheapest_total']:.2f}")
+        st.caption(f"Savings: ${results['potential_savings']:.2f} vs highest price.")
+
+        col_dl, col_save = st.columns(2)
+
+        with col_dl:
+            # Download Button
+            plan_text = f"Goose Grocer Meal Plan: {st.session_state.meal_name_tab3}\nStore: {results['cheapest_store']}\nEst. Cost: ${results['cheapest_total']:.2f}\n\nIngredients:\n"
+            for ing in ingredients:
+                plan_text += f"- [ ] {ing}\n"
+
+            st.download_button("📥 Download Text File", plan_text, "meal_plan.txt")
+
+        with col_save:
+            # SAVE TO DB BUTTON
+            if st.button("💾 Save to Recipe Book", type="secondary"):
+                save_recipe(
+                    st.session_state.meal_name_tab3,
+                    ingredients,
+                    instructions="AI Generated Instructions would go here."
+                )
+                st.toast(f"Saved '{st.session_state.meal_name_tab3}' to Recipe Book!", icon="✅")
 
 # ---- TAB 4: WEEKLY SCHEDULE ----
 with tab4:
     st.subheader("Weekly Schedule")
     st.caption("Plan meals for the week to generate a master shopping list.")
 
-    st.write("Enter meal plan:")
-
-    # Inject CSS for white outline and taller boxes
+    # CSS for styled inputs
     st.markdown("""
         <style>
         .weekly-input input {
-            height: 120px;  /* make the box taller */
-            padding: 10px;
-            border: 2px solid white;  /* white outline */
+            height: 100px;
+            border: 1px solid #ddd;
             border-radius: 5px;
-            color: black;
-            background-color: #ffffff;
         }
-        .weekly-input label {
-            font-weight: bold;
-        }
+        .weekly-input label { font-weight: bold; }
         </style>
     """, unsafe_allow_html=True)
 
     mon_col, tue_col, wed_col, thu_col, fri_col, sat_col, sun_col = st.columns(7)
 
-    # Helper function to wrap text input in a div with CSS class
     def styled_input(label, key, col):
         with col:
             st.markdown(f"<div class='weekly-input'><label>{label}</label></div>", unsafe_allow_html=True)
-            return st.text_area("", key=key, height=100)  # use text_area for wrapping text
+            return st.text_area("", key=key, height=100)
 
     mon_input = styled_input("Mon", "tab4_mon", mon_col)
     tue_input = styled_input("Tue", "tab4_tue", tue_col)
@@ -279,6 +319,11 @@ with tab4:
 
     st.divider()
 
+    if 'results_tab4' not in st.session_state:
+        st.session_state.results_tab4 = None
+    if 'unique_ings_tab4' not in st.session_state:
+        st.session_state.unique_ings_tab4 = None
+
     if st.button("Generate Master List", type="primary", key="generate_weekly_list"):
         meals = [x for x in [mon_input, tue_input, wed_input, thu_input, fri_input, sat_input, sun_input] if x.strip()]
 
@@ -289,25 +334,36 @@ with tab4:
                     all_ings.extend(expand_meal_to_ingredients(meal))
 
                 unique_ings = list(set(all_ings))
-                st.success(f"Master list created: {len(unique_ings)} items.")
-
-                with st.expander("View Shopping List", expanded=True):
-                    for ing in unique_ings:
-                        st.write(f"• {ing}")
-
-                st.divider()
-
-                with st.spinner("Comparing prices..."):
-                    results = compare_prices(unique_ings)
-
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown(f"### Best Value: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
-                    st.markdown(f"<h2 style='color: {GOOSE_GREEN}'>${results['cheapest_total']:.2f}</h2>", unsafe_allow_html=True)
-                with col2:
-                    st.metric("Total Savings", f"${results['potential_savings']:.2f}")
+                st.session_state.unique_ings_tab4 = unique_ings
+                st.session_state.results_tab4 = compare_prices(unique_ings)
         else:
             st.warning("Enter at least one meal.")
+
+    if st.session_state.results_tab4:
+        results = st.session_state.results_tab4
+        unique_ings = st.session_state.unique_ings_tab4
+
+        st.success(f"Master list created: {len(unique_ings)} items.")
+        with st.expander("View Shopping List", expanded=True):
+            for ing in unique_ings:
+                st.write(f"• {ing}")
+
+        st.divider()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"### Best Value: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color: {GOOSE_GREEN}'>${results['cheapest_total']:.2f}</h2>", unsafe_allow_html=True)
+        with col2:
+            st.metric("Total Savings", f"${results['potential_savings']:.2f}")
+
+        # Download Button
+        weekly_text = f"Goose Grocer Weekly Plan\nStore: {results['cheapest_store']}\nTotal: ${results['cheapest_total']:.2f}\n\nShopping List:\n"
+        for ing in unique_ings:
+            weekly_text += f"- [ ] {ing}\n"
+
+        st.download_button("📥 Download Weekly List", weekly_text, "weekly_list.txt")
+
 
 # ---- TAB 5: BULK MEAL PREP ----
 with tab5:
@@ -326,11 +382,10 @@ with tab5:
             base_ings = ["chicken breast", "brown rice", "broccoli", "eggs", "oats",
                          "protein powder", "sweet potato", "greek yogurt", "spinach"]
 
-            st.success(f"Plan generated for {days * meals_per_day} meals.")
-
             with st.spinner("Calculating costs..."):
                 results = compare_prices(base_ings)
 
+            st.success(f"Plan generated for {days * meals_per_day} meals.")
             c1, c2, c3 = st.columns(3)
             with c1:
                 st.metric("Total Cost", f"${results['cheapest_total']:.2f}")
@@ -342,7 +397,22 @@ with tab5:
                 st.metric("Cost / Meal", f"${cost_per_meal:.2f}")
 
             st.markdown(f"### Recommended Store: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
+
+            # Download
+            gym_text = f"Goose Grocer Gym Prep\nTarget: {days} days, {meals_per_day} meals/day\nStore: {results['cheapest_store']}\nTotal: ${results['cheapest_total']:.2f}\n\nList:\n"
+            for ing in base_ings:
+                gym_text += f"- [ ] {ing}\n"
+            st.download_button("📥 Download Prep List", gym_text, "gym_prep.txt")
+
     else:
+        # Session State for Batch
+        if 'results_tab5' not in st.session_state:
+            st.session_state.results_tab5 = None
+        if 'ingredients_tab5' not in st.session_state:
+            st.session_state.ingredients_tab5 = None
+        if 'recipe_tab5' not in st.session_state:
+            st.session_state.recipe_tab5 = ""
+
         st.write("Batch cooking analysis.")
         recipe = st.text_input("Recipe Name", placeholder="e.g., Vegetarian Chili", key="bulk_recipe")
         servings = st.number_input("Servings", 4, 50, 8, key="bulk_servings")
@@ -351,18 +421,43 @@ with tab5:
             if recipe:
                 with st.spinner("Analyzing ingredients..."):
                     ings = expand_meal_to_ingredients(f"{recipe} for {servings} servings")
-                    results = compare_prices(ings)
-
-                st.success(f"Analysis complete for {servings} servings.")
-                st.write("**Ingredients:**")
-                st.write(", ".join(ings))
-
-                st.divider()
-                st.metric("Total Batch Cost", f"${results['cheapest_total']:.2f}")
-                st.caption(f"Cost per serving: ${results['cheapest_total']/servings:.2f}")
-                st.markdown(f"### Best Price at <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
+                    st.session_state.ingredients_tab5 = ings
+                    st.session_state.recipe_tab5 = recipe
+                    st.session_state.results_tab5 = compare_prices(ings)
             else:
                 st.warning("Please enter a recipe name.")
+
+        if st.session_state.results_tab5:
+            results = st.session_state.results_tab5
+            ings = st.session_state.ingredients_tab5
+
+            st.success(f"Analysis complete for {servings} servings.")
+            st.write("**Ingredients:**")
+            st.write(", ".join(ings))
+
+            st.divider()
+            st.metric("Total Batch Cost", f"${results['cheapest_total']:.2f}")
+            st.caption(f"Cost per serving: ${results['cheapest_total']/servings:.2f}")
+            st.markdown(f"### Best Price at <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
+
+            col_dl, col_save = st.columns(2)
+            with col_dl:
+                # Download
+                batch_text = f"Goose Grocer Batch Cook: {st.session_state.recipe_tab5}\nServings: {servings}\nStore: {results['cheapest_store']}\nTotal: ${results['cheapest_total']:.2f}\n\nIngredients:\n"
+                for ing in ings:
+                    batch_text += f"- [ ] {ing}\n"
+                st.download_button("📥 Download Text File", batch_text, "batch_recipe.txt")
+
+            with col_save:
+                # SAVE TO DB
+                if st.button("💾 Save to Recipe Book", key="save_batch"):
+                    save_recipe(
+                        st.session_state.recipe_tab5,
+                        ings,
+                        f"Batch cooking instructions for {servings} servings."
+                    )
+                    st.toast(f"Saved '{st.session_state.recipe_tab5}' to Recipe Book!", icon="✅")
+
 
 # ---- TAB 6: BROWSE DB ----
 with tab6:
@@ -374,6 +469,34 @@ with tab6:
             products_df = products_df[products_df["product_name"].str.contains(search, case=False)]
         st.dataframe(products_df[["product_name", "category", "no_frills_price", "walmart_price"]],
                      use_container_width=True)
+
+# ---- TAB 7: RECIPE BOOK ----
+with tab7:
+    st.subheader("📖 My Saved Recipes")
+
+    saved_df = get_saved_recipes()
+
+    if saved_df.empty:
+        st.info("No recipes saved yet. Go to the Meal Planner or Bulk Prep tab to generate and save some!")
+    else:
+        st.write(f"You have {len(saved_df)} saved recipes.")
+
+        for index, row in saved_df.iterrows():
+            with st.expander(f"🍲 {row['title']} (Saved: {row['created_at']})"):
+                st.write("**Ingredients:**")
+                st.text(row['ingredients'])
+                if row['instructions']:
+                    st.write("**Instructions:**")
+                    st.write(row['instructions'])
+
+                # Re-calculate button
+                if st.button(f"🔍 Check Current Prices for '{row['title']}'", key=f"recheck_{row['id']}"):
+                    # Logic to re-run price comparison
+                    ings_list = row['ingredients'].split('\n')
+                    with st.spinner("Checking fresh prices..."):
+                        results = compare_prices(ings_list)
+                    st.success(f"Best Price Now: ${results['cheapest_total']:.2f} at {results['cheapest_store']}")
+
 
 # ---------------------------------------------------------------------------
 # FOOTER
