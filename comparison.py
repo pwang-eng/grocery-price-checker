@@ -36,7 +36,7 @@ def setup_gemini():
     if not api_key or api_key == "your_gemini_api_key_here":
         return None
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel("gemini-2.0-flash")
+    return genai.GenerativeModel("gemini-3-flash-preview")
 
 
 def fuzzy_match_items(user_items, available_products):

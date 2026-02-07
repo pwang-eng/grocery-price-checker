@@ -52,8 +52,8 @@ def setup_gemini():
         sys.exit(1)
 
     genai.configure(api_key=api_key)
-    # Use gemini-2.0-flash for vision tasks (fast + free tier friendly)
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    # Use gemini-3-flash-preview for vision tasks (fast + free tier friendly)
+    model = genai.GenerativeModel("gemini-3-flash-preview")
     return model
 
 
