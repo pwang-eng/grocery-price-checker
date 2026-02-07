@@ -29,7 +29,7 @@ STORE_COLORS = {
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="Goose Grocer",
-    page_icon="🪿",
+    page_icon="🦆",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -105,7 +105,7 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "Weekly Schedule",
     "Bulk Prep",
     "Database",
-    "📖 Recipe Book"
+    "Recipe Book"
 ])
 
 # ---- TAB 1: HOME / ABOUT ----
@@ -113,7 +113,7 @@ with tab1:
     st.markdown(f"""
         <div style='text-align: center; padding-top: 50px; padding-bottom: 20px;'>
             <h1 style='font-size: 80px; margin-bottom: 0;'>
-                🪿 <span style='color: white;'>Goose</span> <span style='color: {GOOSE_GREEN};'>Grocer</span>
+                <span style='color: white;'>Goose</span> <span style='color: {GOOSE_GREEN};'>Grocer</span>
             </h1>
             <h3 style='font-weight: 300; margin-top: 10px; font-style: italic; opacity: 0.8;'>
                 <span style='color: white;'>Stop spending.</span> <span style='color: {GOOSE_GREEN};'>Start saving.</span>
@@ -216,7 +216,7 @@ with tab2:
         for item in results["items"]:
             list_text += f"- [ ] {item['matched_product']} (${item['cheapest_price']:.2f})\n"
 
-        st.download_button("📥 Download List", list_text, "grocery_list.txt")
+        st.download_button("Download List", list_text, "grocery_list.txt")
 
 # ---- TAB 3: MEAL PLANNER ----
 with tab3:
@@ -273,17 +273,17 @@ with tab3:
             for ing in ingredients:
                 plan_text += f"- [ ] {ing}\n"
 
-            st.download_button("📥 Download Text File", plan_text, "meal_plan.txt")
+            st.download_button("Download Text File", plan_text, "meal_plan.txt")
 
         with col_save:
             # SAVE TO DB BUTTON
-            if st.button("💾 Save to Recipe Book", type="secondary"):
+            if st.button("Save to Recipe Book", type="secondary"):
                 save_recipe(
                     st.session_state.meal_name_tab3,
                     ingredients,
                     instructions="AI Generated Instructions would go here."
                 )
-                st.toast(f"Saved '{st.session_state.meal_name_tab3}' to Recipe Book!", icon="✅")
+                st.toast(f"Saved '{st.session_state.meal_name_tab3}' to Recipe Book!")
 
 # ---- TAB 4: WEEKLY SCHEDULE ----
 with tab4:
@@ -362,7 +362,7 @@ with tab4:
         for ing in unique_ings:
             weekly_text += f"- [ ] {ing}\n"
 
-        st.download_button("📥 Download Weekly List", weekly_text, "weekly_list.txt")
+        st.download_button("Download Weekly List", weekly_text, "weekly_list.txt")
 
 
 # ---- TAB 5: BULK MEAL PREP ----
@@ -402,7 +402,7 @@ with tab5:
             gym_text = f"Goose Grocer Gym Prep\nTarget: {days} days, {meals_per_day} meals/day\nStore: {results['cheapest_store']}\nTotal: ${results['cheapest_total']:.2f}\n\nList:\n"
             for ing in base_ings:
                 gym_text += f"- [ ] {ing}\n"
-            st.download_button("📥 Download Prep List", gym_text, "gym_prep.txt")
+            st.download_button("Download Prep List", gym_text, "gym_prep.txt")
 
     else:
         # Session State for Batch
@@ -446,17 +446,17 @@ with tab5:
                 batch_text = f"Goose Grocer Batch Cook: {st.session_state.recipe_tab5}\nServings: {servings}\nStore: {results['cheapest_store']}\nTotal: ${results['cheapest_total']:.2f}\n\nIngredients:\n"
                 for ing in ings:
                     batch_text += f"- [ ] {ing}\n"
-                st.download_button("📥 Download Text File", batch_text, "batch_recipe.txt")
+                st.download_button("Download Text File", batch_text, "batch_recipe.txt")
 
             with col_save:
                 # SAVE TO DB
-                if st.button("💾 Save to Recipe Book", key="save_batch"):
+                if st.button("Save to Recipe Book", key="save_batch"):
                     save_recipe(
                         st.session_state.recipe_tab5,
                         ings,
                         f"Batch cooking instructions for {servings} servings."
                     )
-                    st.toast(f"Saved '{st.session_state.recipe_tab5}' to Recipe Book!", icon="✅")
+                    st.toast(f"Saved '{st.session_state.recipe_tab5}' to Recipe Book!")
 
 
 # ---- TAB 6: BROWSE DB ----
@@ -472,7 +472,7 @@ with tab6:
 
 # ---- TAB 7: RECIPE BOOK ----
 with tab7:
-    st.subheader("📖 My Saved Recipes")
+    st.subheader("My Saved Recipes")
 
     saved_df = get_saved_recipes()
 
@@ -482,7 +482,7 @@ with tab7:
         st.write(f"You have {len(saved_df)} saved recipes.")
 
         for index, row in saved_df.iterrows():
-            with st.expander(f"🍲 {row['title']} (Saved: {row['created_at']})"):
+            with st.expander(f"{row['title']} (Saved: {row['created_at']})"):
                 st.write("**Ingredients:**")
                 st.text(row['ingredients'])
                 if row['instructions']:
@@ -490,7 +490,7 @@ with tab7:
                     st.write(row['instructions'])
 
                 # Re-calculate button
-                if st.button(f"🔍 Check Current Prices for '{row['title']}'", key=f"recheck_{row['id']}"):
+                if st.button(f"Check Current Prices for '{row['title']}'", key=f"recheck_{row['id']}"):
                     # Logic to re-run price comparison
                     ings_list = row['ingredients'].split('\n')
                     with st.spinner("Checking fresh prices..."):
