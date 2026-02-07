@@ -12,7 +12,6 @@ from comparison import compare_prices, expand_meal_to_ingredients, STORE_COLUMNS
 from flyer_parser import parse_flyer_image, save_deals_to_database
 import os
 
-
 # Brand Colors
 GOOSE_GREEN = "#2E7D32"
 
@@ -24,7 +23,6 @@ STORE_COLORS = {
     "FreshCo": "#00A651",
     "Loblaws": "#D32F2F"
 }
-
 
 # ---------------------------------------------------------------------------
 # PAGE CONFIG
@@ -44,7 +42,6 @@ if "db_initialized" not in st.session_state:
     if get_all_products().empty:
         load_seed_data()
     st.session_state.db_initialized = True
-
 
 # ---------------------------------------------------------------------------
 # SIDEBAR
@@ -66,7 +63,7 @@ with st.sidebar:
     if uploaded_flyer is not None:
         st.image(uploaded_flyer, caption=f"{store_name} flyer", use_container_width=True)
 
-        if st.button("Analyze Flyer", type="primary"):
+        if st.button("Analyze Flyer", type="primary", key="analyze_flyer"):
             temp_path = os.path.join("data", "flyers", uploaded_flyer.name)
             os.makedirs(os.path.join("data", "flyers"), exist_ok=True)
 
@@ -81,10 +78,9 @@ with st.sidebar:
                 for deal in deals:
                     brand = deal.get('brand', '')
                     brand_str = f"({brand}) " if brand else ""
-                    st.write(f"• {brand_str}{deal['product_name']} — "
-                             f"${deal['sale_price']:.2f}")
+                    st.write(f"• {brand_str}{deal['product_name']} — ${deal['sale_price']:.2f}")
 
-                if st.button("Save to Database"):
+                if st.button("Save to Database", key="save_flyer"):
                     save_deals_to_database(deals, store_name, uploaded_flyer.name)
                     st.success("Data saved.")
                     st.rerun()
@@ -99,7 +95,6 @@ with st.sidebar:
         for _, deal in flyer_deals.iterrows():
             st.write(f"• {deal['product_name']} @ {deal['store']} — ${deal['sale_price']:.2f}")
 
-
 # ---------------------------------------------------------------------------
 # MAIN NAVIGATION
 # ---------------------------------------------------------------------------
@@ -111,7 +106,6 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "Bulk Prep",
     "Database"
 ])
-
 
 # ---- TAB 1: HOME / ABOUT ----
 with tab1:
@@ -133,7 +127,7 @@ with tab1:
         st.markdown(f"""
         ### Our Mission
         **Grocery shopping takes time, and time is money.**
-        
+
         Goose Grocer streamlines the grocery experience, making buying local, affordable groceries 
         as efficient as ordering delivery. Our platform instantly compares prices across major 
         retailers to optimize your spending without the manual effort.
@@ -156,7 +150,6 @@ with tab1:
         st.markdown(f"<h4 style='color:{GOOSE_GREEN}'>Bulk Prep</h4>", unsafe_allow_html=True)
         st.caption("Cost analysis for batch cooking and meal preparation.")
 
-
 # ---- TAB 2: GROCERY LIST ----
 with tab2:
     st.subheader("Smart Grocery List")
@@ -165,15 +158,15 @@ with tab2:
     st.write("Examples:")
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("Everyday Essentials"):
+        if st.button("Everyday Essentials", key="example_essentials"):
             st.session_state['grocery_input'] = "milk\neggs\nbread\nbutter\ncheese"
             st.rerun()
     with col2:
-        if st.button("Pasta Dinner"):
+        if st.button("Pasta Dinner", key="example_pasta"):
             st.session_state['grocery_input'] = "pasta\nbacon\neggs\nparmesan cheese\nheavy cream"
             st.rerun()
     with col3:
-        if st.button("Salad Ingredients"):
+        if st.button("Salad Ingredients", key="example_salad"):
             st.session_state['grocery_input'] = "lettuce\ntomatoes\ncucumber\ncarrots\nolive oil"
             st.rerun()
 
@@ -211,15 +204,14 @@ with tab2:
                 "Best Price": f"{i['cheapest_store']} (${i['cheapest_price']:.2f})"
             } for i in results["items"]]), use_container_width=True, hide_index=True)
 
-
 # ---- TAB 3: MEAL PLANNER ----
 with tab3:
     st.subheader("Meal Planner")
     st.caption("Describe a meal to generate a shopping list and cost estimate.")
 
-    meal_input = st.text_input("Meal Description", placeholder="e.g., Tacos for 4 people")
+    meal_input = st.text_input("Meal Description", placeholder="e.g., Tacos for 4 people", key="meal_input")
 
-    if st.button("Generate Plan", type="primary", key="compare_meal"):
+    if st.button("Generate Plan", type="primary", key="generate_meal_plan"):
         if meal_input:
             with st.spinner("Generating ingredient list..."):
                 ingredients = expand_meal_to_ingredients(meal_input)
@@ -234,14 +226,16 @@ with tab3:
                 with st.spinner("Calculating costs..."):
                     results = compare_prices(ingredients)
 
-                st.markdown(f"### Recommended Store: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
+                st.markdown(
+                    f"### Recommended Store: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>",
+                    unsafe_allow_html=True
+                )
                 st.write(f"Total Cost: ${results['cheapest_total']:.2f}")
                 st.caption(f"Savings: ${results['potential_savings']:.2f} vs highest price.")
             else:
                 st.error("Could not interpret meal description.")
         else:
             st.warning("Please enter a description.")
-
 
 # ---- TAB 4: WEEKLY SCHEDULE ----
 with tab4:
@@ -250,28 +244,43 @@ with tab4:
 
     st.write("Enter meal plan:")
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        mon = st.text_input("Monday", key="mon")
-    with c2:
-        tue = st.text_input("Tuesday", key="tue")
-    with c3:
-        wed = st.text_input("Wednesday", key="wed")
+    # Inject CSS for white outline and taller boxes
+    st.markdown("""
+        <style>
+        .weekly-input input {
+            height: 120px;  /* make the box taller */
+            padding: 10px;
+            border: 2px solid white;  /* white outline */
+            border-radius: 5px;
+            color: black;
+            background-color: #ffffff;
+        }
+        .weekly-input label {
+            font-weight: bold;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
-    c4, c5, c6 = st.columns(3)
-    with c4:
-        thu = st.text_input("Thursday", key="thu")
-    with c5:
-        fri = st.text_input("Friday", key="fri")
-    with c6:
-        sat = st.text_input("Saturday", key="sat")
+    mon_col, tue_col, wed_col, thu_col, fri_col, sat_col, sun_col = st.columns(7)
 
-    sun = st.text_input("Sunday", key="sun")
+    # Helper function to wrap text input in a div with CSS class
+    def styled_input(label, key, col):
+        with col:
+            st.markdown(f"<div class='weekly-input'><label>{label}</label></div>", unsafe_allow_html=True)
+            return st.text_area("", key=key, height=100)  # use text_area for wrapping text
+
+    mon_input = styled_input("Mon", "tab4_mon", mon_col)
+    tue_input = styled_input("Tue", "tab4_tue", tue_col)
+    wed_input = styled_input("Wed", "tab4_wed", wed_col)
+    thu_input = styled_input("Thu", "tab4_thu", thu_col)
+    fri_input = styled_input("Fri", "tab4_fri", fri_col)
+    sat_input = styled_input("Sat", "tab4_sat", sat_col)
+    sun_input = styled_input("Sun", "tab4_sun", sun_col)
 
     st.divider()
 
-    if st.button("Generate Master List", type="primary"):
-        meals = [x for x in [mon, tue, wed, thu, fri, sat, sun] if x.strip()]
+    if st.button("Generate Master List", type="primary", key="generate_weekly_list"):
+        meals = [x for x in [mon_input, tue_input, wed_input, thu_input, fri_input, sat_input, sun_input] if x.strip()]
 
         if meals:
             with st.spinner("Processing weekly plan..."):
@@ -300,7 +309,6 @@ with tab4:
         else:
             st.warning("Enter at least one meal.")
 
-
 # ---- TAB 5: BULK MEAL PREP ----
 with tab5:
     st.subheader("Bulk Meal Prep")
@@ -314,7 +322,7 @@ with tab5:
         days = st.slider("Number of Days", 3, 7, 5)
         meals_per_day = st.slider("Meals per Day", 1, 5, 3)
 
-        if st.button("Generate Plan", type="primary"):
+        if st.button("Generate Plan", type="primary", key="generate_bulk_gym"):
             base_ings = ["chicken breast", "brown rice", "broccoli", "eggs", "oats",
                          "protein powder", "sweet potato", "greek yogurt", "spinach"]
 
@@ -334,13 +342,12 @@ with tab5:
                 st.metric("Cost / Meal", f"${cost_per_meal:.2f}")
 
             st.markdown(f"### Recommended Store: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
-
     else:
         st.write("Batch cooking analysis.")
-        recipe = st.text_input("Recipe Name", placeholder="e.g., Vegetarian Chili")
-        servings = st.number_input("Servings", 4, 50, 8)
+        recipe = st.text_input("Recipe Name", placeholder="e.g., Vegetarian Chili", key="bulk_recipe")
+        servings = st.number_input("Servings", 4, 50, 8, key="bulk_servings")
 
-        if st.button("Analyze Cost"):
+        if st.button("Analyze Cost", key="analyze_bulk"):
             if recipe:
                 with st.spinner("Analyzing ingredients..."):
                     ings = expand_meal_to_ingredients(f"{recipe} for {servings} servings")
@@ -357,17 +364,16 @@ with tab5:
             else:
                 st.warning("Please enter a recipe name.")
 
-
 # ---- TAB 6: BROWSE DB ----
 with tab6:
     st.subheader("Product Database")
     products_df = get_all_products()
     if not products_df.empty:
-        search = st.text_input("Search Database", placeholder="Product name...")
+        search = st.text_input("Search Database", placeholder="Product name...", key="db_search")
         if search:
             products_df = products_df[products_df["product_name"].str.contains(search, case=False)]
-        st.dataframe(products_df[["product_name", "category", "no_frills_price", "walmart_price"]], use_container_width=True)
-
+        st.dataframe(products_df[["product_name", "category", "no_frills_price", "walmart_price"]],
+                     use_container_width=True)
 
 # ---------------------------------------------------------------------------
 # FOOTER
