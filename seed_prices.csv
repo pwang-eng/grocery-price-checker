@@ -1,0 +1,61 @@
+product_name,category,brand,unit,no_frills_price,food_basics_price,walmart_price,freshco_price,loblaws_price,source
+2% Milk 4L,Dairy,Neilson,4L bag,5.49,5.29,5.47,5.29,5.99,manual
+Whole Milk 4L,Dairy,Neilson,4L bag,5.49,5.49,5.47,5.49,5.99,manual
+1% Milk 4L,Dairy,Neilson,4L bag,5.49,5.29,5.47,5.29,5.99,manual
+Butter Salted,Dairy,Lactantia,454g,5.99,5.79,5.97,5.99,6.49,manual
+Butter Unsalted,Dairy,Lactantia,454g,5.99,5.79,5.97,5.99,6.49,manual
+Cheddar Cheese Medium,Dairy,Black Diamond,400g,6.99,6.99,6.97,6.79,7.49,manual
+Mozzarella Cheese Shredded,Dairy,Black Diamond,320g,5.49,5.29,5.47,5.49,5.99,manual
+Greek Yogurt Plain,Dairy,Oikos,750g,5.99,5.99,5.97,5.79,6.49,manual
+Cream Cheese,Dairy,Philadelphia,250g,4.49,4.29,4.27,4.49,4.99,manual
+Eggs Large 12pk,Dairy,No Name,12 eggs,4.29,4.19,4.27,4.29,4.49,manual
+White Bread,Bakery,Dempsters,675g,3.49,3.29,3.47,3.49,3.99,manual
+Whole Wheat Bread,Bakery,Dempsters,675g,3.49,3.29,3.47,3.49,3.99,manual
+Bagels Plain 6pk,Bakery,Dempsters,6 pack,3.99,3.79,3.97,3.99,4.49,manual
+English Muffins 6pk,Bakery,Dempsters,6 pack,3.49,3.29,3.47,3.49,3.99,manual
+Tortillas Large 10pk,Bakery,Old El Paso,10 pack,4.49,4.29,4.27,4.49,4.99,manual
+Chicken Breast Boneless,Meat,Fresh,per lb,4.98,4.98,5.47,5.29,6.99,manual
+Ground Beef Lean,Meat,Fresh,per lb,5.99,5.79,5.97,5.99,6.99,manual
+Ground Beef Extra Lean,Meat,Fresh,per lb,6.99,6.79,6.97,6.99,7.99,manual
+Pork Chops Boneless,Meat,Fresh,per lb,4.49,4.29,4.47,4.49,5.49,manual
+Bacon,Meat,Maple Leaf,375g,6.99,6.79,6.97,6.79,7.49,manual
+Chicken Thighs Boneless,Meat,Fresh,per lb,4.49,4.29,4.47,4.49,5.49,manual
+Salmon Fillet,Meat,Fresh,per lb,9.99,9.79,9.97,9.99,11.99,manual
+Chicken Nuggets,Frozen,Janes,700g,5.88,5.88,5.97,5.99,6.49,manual
+Chicken Strips,Frozen,Janes,700g,5.88,5.88,5.97,5.99,6.49,manual
+Bananas,Produce,Fresh,per lb,0.69,0.69,0.67,0.69,0.79,manual
+Apples Gala,Produce,Fresh,per lb,1.99,1.79,1.97,1.99,2.29,manual
+Avocados,Produce,Fresh,each,1.50,1.29,1.47,1.50,1.99,manual
+Tomatoes on the Vine,Produce,Fresh,per lb,2.49,2.29,2.47,2.49,2.99,manual
+Potatoes Russet 10lb,Produce,Fresh,10lb bag,4.99,4.79,4.97,4.99,5.99,manual
+Onions Yellow 3lb,Produce,Fresh,3lb bag,2.99,2.79,2.97,2.99,3.49,manual
+Carrots 2lb,Produce,Fresh,2lb bag,1.99,1.79,1.97,1.99,2.49,manual
+Broccoli Crown,Produce,Fresh,each,2.49,2.29,2.47,2.49,2.99,manual
+Lettuce Romaine,Produce,Fresh,each,2.99,2.79,2.97,2.99,3.49,manual
+Cucumber English,Produce,Fresh,each,1.99,1.79,1.97,1.99,2.29,manual
+Peppers Green,Produce,Fresh,each,1.49,1.29,1.47,1.49,1.79,manual
+White Rice,Pantry,Uncle Bens,900g,3.49,3.29,3.27,3.49,3.99,manual
+Spaghetti Pasta,Pantry,Barilla,454g,1.68,1.79,1.97,1.99,2.29,manual
+Penne Pasta,Pantry,Barilla,454g,1.68,1.79,1.97,1.99,2.29,manual
+Pasta Sauce Marinara,Pantry,Ragu,640ml,2.99,2.79,2.97,2.99,3.49,manual
+Tomato Sauce Canned,Pantry,Aylmer,680ml,1.68,1.49,1.67,1.69,1.99,manual
+Chicken Broth,Pantry,Campbells,900ml,2.49,2.29,2.47,2.49,2.99,manual
+Chunky Soup,Pantry,Campbells,515ml,2.99,2.79,2.97,2.99,3.29,manual
+Peanut Butter,Pantry,Kraft,1kg,5.99,5.79,5.97,5.99,6.49,manual
+Ketchup,Pantry,Heinz,750ml,4.49,4.29,4.27,4.49,4.99,manual
+Canola Oil,Pantry,No Name,946ml,4.49,4.29,4.47,4.49,4.99,manual
+Olive Oil Extra Virgin,Pantry,No Name,500ml,6.99,6.79,6.97,6.99,7.99,manual
+Ritz Crackers,Snacks,Christie,200g,2.88,2.79,2.97,2.99,3.49,manual
+Tostitos Chips,Snacks,Tostitos,275g,4.49,4.29,4.27,4.49,4.99,manual
+Lays Chips,Snacks,Lays,235g,2.75,2.79,2.97,2.99,3.49,manual
+Coca Cola 6pk,Beverages,Coca Cola,6x355ml,4.99,4.79,4.97,4.99,5.49,manual
+Pepsi 6pk,Beverages,Pepsi,6x355ml,4.99,4.79,4.97,4.99,5.49,manual
+Orange Juice,Beverages,Tropicana,1.75L,4.99,4.79,4.97,4.99,5.49,manual
+Coffee Ground,Beverages,Folgers,920g,12.99,12.79,12.97,12.99,13.99,manual
+Eska Water 24pk,Beverages,Eska,24x500ml,3.99,3.79,3.97,3.99,4.49,manual
+Frozen Pizza Delissio,Frozen,Delissio,each,4.98,4.79,4.97,4.99,5.99,manual
+Frozen Vegetables Mixed,Frozen,Green Giant,750g,3.49,3.29,3.47,3.49,3.99,manual
+Ice Cream,Frozen,Chapmans,2L,4.99,4.79,4.97,4.99,5.49,manual
+Paper Towels 6pk,Household,Sponge Towels,6 roll,7.99,7.79,7.97,7.99,8.99,manual
+Dish Soap,Household,Dawn,532ml,3.49,3.29,3.47,3.49,3.99,manual
+Laundry Detergent,Household,Tide,1.36L,11.99,11.79,11.47,11.99,12.99,manual
