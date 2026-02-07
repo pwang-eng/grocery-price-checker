@@ -1,0 +1,16 @@
+[theme]
+base = "dark"
+
+# Brand green
+primaryColor = "#2E7D32"
+
+# Near-black green background
+backgroundColor = "#0E1A14"
+
+# Cards / sidebar
+secondaryBackgroundColor = "#162822"
+
+# Pure white text
+textColor = "#FFFFFF"
+
+font = "comic sans"
