@@ -199,7 +199,6 @@ with tab1:
         )
         st.caption("Cost analysis for batch cooking and meal preparation.")
 
-
 # ---- TAB 2: GROCERY LIST ----
 with tab2:
     st.subheader("Smart Grocery List")
@@ -209,20 +208,106 @@ with tab2:
     if 'results_tab2' not in st.session_state:
         st.session_state.results_tab2 = None
 
-    st.write("Examples:")
-    col1, col2, col3 = st.columns(3)
+    st.write("Quick List Examples:")
+
+    # Custom CSS for different green hover effects
+    st.markdown(f"""
+        <style>
+        /* Light green for everyday/snack items */
+        .stButton > button[kind="secondary"] {{
+            background-color: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }}
+        .stButton > button[kind="secondary"]:hover {{
+            background-color: #66BB6A;
+            color: white;
+            border: 1px solid #66BB6A;
+        }}
+
+        /* We'll use inline styling for specific buttons */
+        </style>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    # Light green items (everyday/snacks)
     with col1:
-        if st.button("Everyday Essentials", key="example_essentials"):
+        if st.button("Everyday Essentials", key="example_essentials", help="Light items"):
             st.session_state['grocery_input'] = "milk\neggs\nbread\nbutter\ncheese"
             st.rerun()
+        if st.button("Breakfast Staples", key="example_breakfast", help="Light items"):
+            st.session_state['grocery_input'] = "eggs\nbacon\nbread\norange juice\ncoffee\nbutter"
+            st.rerun()
+
+    # Dark green items (full meals)
     with col2:
-        if st.button("Pasta Dinner", key="example_pasta"):
+        if st.button("Pasta Dinner", key="example_pasta", help="Full meal"):
             st.session_state['grocery_input'] = "pasta\nbacon\neggs\nparmesan cheese\nheavy cream"
             st.rerun()
+        if st.button("Taco Night", key="example_taco", help="Full meal"):
+            st.session_state['grocery_input'] = "ground beef\ntortillas\nlettuce\ntomatoes\ncheese\nsour cream"
+            st.rerun()
+
+    # Light green items
     with col3:
-        if st.button("Salad Ingredients", key="example_salad"):
+        if st.button("Salad Ingredients", key="example_salad", help="Light items"):
             st.session_state['grocery_input'] = "lettuce\ntomatoes\ncucumber\ncarrots\nolive oil"
             st.rerun()
+        if st.button("Sandwich Fixings", key="example_sandwich", help="Light items"):
+            st.session_state['grocery_input'] = "bread\nham\nturkey\ncheese\nlettuce\nmayo"
+            st.rerun()
+
+    # Light green (smoothie) and Dark green (BBQ)
+    with col4:
+        if st.button("Smoothie Supplies", key="example_smoothie", help="Light items"):
+            st.session_state['grocery_input'] = "bananas\nstrawberries\nyogurt\nspinach\nprotein powder"
+            st.rerun()
+        if st.button("BBQ Essentials", key="example_bbq", help="Full meal"):
+            st.session_state['grocery_input'] = "chicken breast\nground beef\nhotdogs\nbuns\nketchup\nmustard"
+            st.rerun()
+
+    # Apply custom hover colors using JavaScript
+    st.markdown("""
+        <style>
+        /* Light green for light items */
+        button[data-testid="baseButton-secondary"]:has([title*="Light items"]):hover,
+        button[kind="secondary"]:nth-child(1):hover,
+        button[kind="secondary"]:nth-child(2):hover {
+            background-color: #81C784 !important;
+        }
+
+        /* Dark green for full meals */
+        button[data-testid="baseButton-secondary"]:has([title*="Full meal"]):hover {
+            background-color: #2E7D32 !important;
+        }
+
+        /* Target specific buttons by their text content */
+        button:has(p:contains("Everyday Essentials")):hover,
+        button:has(p:contains("Breakfast Staples")):hover,
+        button:has(p:contains("Salad Ingredients")):hover,
+        button:has(p:contains("Sandwich Fixings")):hover,
+        button:has(p:contains("Smoothie Supplies")):hover {
+            background-color: #81C784 !important;
+            border-color: #81C784 !important;
+        }
+
+        button:has(p:contains("Pasta Dinner")):hover,
+        button:has(p:contains("Taco Night")):hover,
+        button:has(p:contains("BBQ Essentials")):hover {
+            background-color: #2E7D32 !important;
+            border-color: #2E7D32 !important;
+        }
+
+        /* Base button style */
+        div[data-testid="column"] .stButton > button {
+            background-color: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
     grocery_input = st.text_area(
         "Shopping List",
@@ -250,7 +335,8 @@ with tab2:
             st.markdown(f"<h2 style='color: {GOOSE_GREEN};'>{cheapest}</h2>", unsafe_allow_html=True)
             st.write(f"Total: ${results['cheapest_total']:.2f}")
         with col2:
-            st.metric("Estimated Savings", f"${results['potential_savings']:.2f}", f"vs {results['most_expensive_store']}")
+            st.metric("Estimated Savings", f"${results['potential_savings']:.2f}",
+                      f"vs {results['most_expensive_store']}")
         with col3:
             st.metric("Items Matched", f"{results['items_matched']}/{results['items_total']}")
 
