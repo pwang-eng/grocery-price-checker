@@ -510,53 +510,149 @@ with tab5:
 # ---- TAB 6: BROWSE DB ----
 with tab6:
     st.subheader("Product Database")
+
     products_df = get_all_products()
     if not products_df.empty:
-        search = st.text_input("Search Database", placeholder="Product name...", key="db_search")
-        if search:
-            products_df = products_df[products_df["product_name"].str.contains(search, case=False)]
+        # Create sidebar layout: filters on left, database on right
+        filter_col, data_col = st.columns([1, 3])
 
-        # Display all store columns
-        st.dataframe(
-            products_df[[
-                "product_name",
-                "category",
-                "no_frills_price",
-                "food_basics_price",
-                "walmart_price",
-                "freshco_price",
-                "loblaws_price"
-            ]],
-            use_container_width=True
-        )
+        with filter_col:
+            st.markdown("#### Filters")
 
-# ---- TAB 7: RECIPE BOOK ----
-with tab7:
-    st.subheader("My Saved Recipes")
+            # Initialize session state for filters
+            all_stores = ["No Frills", "Food Basics", "Walmart", "FreshCo", "Loblaws"]
+            categories = sorted(products_df['category'].dropna().unique())
 
-    saved_df = get_saved_recipes()
+            if 'selected_stores_checkboxes' not in st.session_state:
+                st.session_state.selected_stores_checkboxes = all_stores.copy()
+            if 'selected_categories_checkboxes' not in st.session_state:
+                st.session_state.selected_categories_checkboxes = categories.copy()
 
-    if saved_df.empty:
-        st.info("No recipes saved yet. Go to the Meal Planner or Bulk Prep tab to generate and save some!")
-    else:
-        st.write(f"You have {len(saved_df)} saved recipes.")
+            # Stores filter (compact)
+            st.markdown("**Stores**")
+            selected_stores = []
+            for store in all_stores:
+                if st.checkbox(store, value=(store in st.session_state.selected_stores_checkboxes),
+                               key=f"store_{store}"):
+                    selected_stores.append(store)
 
-        for index, row in saved_df.iterrows():
-            with st.expander(f"{row['title']} (Saved: {row['created_at']})"):
-                st.write("**Ingredients:**")
-                st.text(row['ingredients'])
-                if row['instructions']:
-                    st.write("**Instructions:**")
-                    st.write(row['instructions'])
+            st.divider()
 
-                # Re-calculate button
-                if st.button(f"Check Current Prices for '{row['title']}'", key=f"recheck_{row['id']}"):
-                    # Logic to re-run price comparison
-                    ings_list = row['ingredients'].split('\n')
-                    with st.spinner("Checking fresh prices..."):
-                        results = compare_prices(ings_list)
-                    st.success(f"Best Price Now: ${results['cheapest_total']:.2f} at {results['cheapest_store']}")
+            # Categories filter (compact)
+            st.markdown("**Categories**")
+            selected_categories = []
+            for category in categories:
+                if st.checkbox(category, value=(category in st.session_state.selected_categories_checkboxes),
+                               key=f"cat_{category}"):
+                    selected_categories.append(category)
 
+            st.divider()
+
+            # Reset button without extra spacing
+            if st.button("Reset", key="reset_filters", use_container_width=True):
+                st.session_state.selected_stores_checkboxes = all_stores.copy()
+                st.session_state.selected_categories_checkboxes = categories.copy()
+                st.rerun()
+
+            # Update session state
+            st.session_state.selected_stores_checkboxes = selected_stores
+            st.session_state.selected_categories_checkboxes = selected_categories
+
+        with data_col:
+            # Legend with rounded color boxes
+            st.markdown("""
+            <span style='display: inline-block; width: 15px; height: 15px; background-color: #4CAF50; border-radius: 3px; margin-right: 5px; vertical-align: middle;'></span>Best Price
+            <span style='display: inline-block; width: 15px; height: 15px; background-color: #90EE90; border-radius: 3px; margin-left: 12px; margin-right: 5px; vertical-align: middle;'></span>2nd Best
+            <span style='display: inline-block; width: 15px; height: 15px; background-color: #FF6B6B; border-radius: 3px; margin-left: 12px; margin-right: 5px; vertical-align: middle;'></span>Most Expensive
+            """, unsafe_allow_html=True)
+
+            # Search box right under legend
+            search = st.text_input("Search Products", placeholder="e.g., chicken, milk...", key="db_search")
+
+            st.divider()
+
+            # Validation
+            if not selected_stores:
+                st.warning("Please select at least one store.")
+                st.stop()
+
+            if not selected_categories:
+                st.warning("Please select at least one category.")
+                st.stop()
+
+            # Apply category filter
+            filtered_df = products_df[products_df['category'].isin(selected_categories)].copy()
+
+            # Apply search filter
+            if search:
+                filtered_df = filtered_df[filtered_df["product_name"].str.contains(search, case=False)]
+
+            if filtered_df.empty:
+                st.info("No products match your filters.")
+            else:
+                # Map store names to column names
+                store_to_col = {
+                    "No Frills": "no_frills_price",
+                    "Food Basics": "food_basics_price",
+                    "Walmart": "walmart_price",
+                    "FreshCo": "freshco_price",
+                    "Loblaws": "loblaws_price"
+                }
+
+                # Select columns based on selected stores
+                selected_price_cols = [store_to_col[store] for store in selected_stores]
+                display_cols = ["product_name", "category"] + selected_price_cols
+
+                display_df = filtered_df[display_cols].copy()
+
+                # Rename columns
+                col_rename = {
+                    "product_name": "Product Name",
+                    "category": "Category",
+                    "no_frills_price": "No Frills",
+                    "food_basics_price": "Food Basics",
+                    "walmart_price": "Walmart",
+                    "freshco_price": "FreshCo",
+                    "loblaws_price": "Loblaws"
+                }
+                display_df.columns = [col_rename.get(col, col) for col in display_df.columns]
+
+                # Get renamed price columns
+                price_cols = [col_rename[pc] for pc in selected_price_cols]
+
+
+                # Highlighting function
+                def highlight_prices(row):
+                    styles = [''] * len(row)
+                    prices = [(row[col], col) for col in price_cols if pd.notna(row[col]) and row[col] > 0]
+
+                    if len(prices) >= 2:
+                        prices.sort(key=lambda x: x[0])
+                        best = prices[0][0]
+                        second = prices[1][0] if len(prices) > 1 else None
+                        worst = prices[-1][0]
+
+                        for idx, col in enumerate(row.index):
+                            if col in price_cols and pd.notna(row[col]) and row[col] > 0:
+                                if row[col] == best:
+                                    styles[idx] = 'background-color: #4CAF50; color: white; font-weight: bold'
+                                elif second and row[col] == second and second != best:
+                                    styles[idx] = 'background-color: #90EE90; color: black; font-weight: bold'
+                                elif row[col] == worst and worst != best:
+                                    styles[idx] = 'background-color: #FF6B6B; color: white; font-weight: bold'
+                    return styles
+
+
+                # Format dictionary for selected stores
+                format_dict = {col: "${:.2f}" for col in price_cols}
+
+                # Apply styling and formatting
+                styled = display_df.style.apply(highlight_prices, axis=1).format(format_dict, na_rep="N/A")
+
+                # Show count
+                st.caption(f"Showing {len(display_df)} products")
+
+                st.dataframe(styled, use_container_width=True, hide_index=True, height=600)
 
 # ---------------------------------------------------------------------------
 # FOOTER
