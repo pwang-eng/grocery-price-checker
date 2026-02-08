@@ -110,7 +110,6 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
 
 # ---- TAB 1: HOME / ABOUT ----
 with tab1:
-
     # Optional vertical centering for columns
     st.markdown("""
     <style>
@@ -198,6 +197,20 @@ with tab1:
             unsafe_allow_html=True
         )
         st.caption("Cost analysis for batch cooking and meal preparation.")
+
+    st.divider()
+
+    # Team Section
+    st.markdown("### Built by Team Geomatics")
+    st.caption(
+        "A hackathon project by 4 passionate developers committed to making grocery shopping smarter and more affordable.")
+
+    st.markdown(f"""
+        <div style='text-align: center; padding: 20px; background-color: rgba(46, 125, 50, 0.1); border-radius: 10px; margin-top: 20px;'>
+            <p style='color: {GOOSE_GREEN}; font-weight: bold; font-size: 18px; margin: 0;'>Team Geomatics</p>
+            <p style='opacity: 0.8; margin-top: 10px;'>Adrien Cheng (MGTE) | Alexander Wong (Math) | Ethan So (CE) | Patrick Wang (MGTE)</p>
+        </div>
+    """, unsafe_allow_html=True)
 
 # ---- TAB 2: GROCERY LIST ----
 with tab2:
