@@ -598,7 +598,7 @@ with tab4:
         ~st.session_state.meal_goals_df["Item"].isin(
             [item for category in st.session_state.quick_add_items.values() for item in category]
         )
-        ]
+    ]
 
     # 2. Backwards Compatibility
     if "Category" not in st.session_state.meal_goals_df.columns:
@@ -620,11 +620,19 @@ with tab4:
 
     # 4. DATA EDITOR (with cleanup)
 
-    # Ensure only the correct columns exist
+    # Ensure only the correct columns exist - STRICT CLEANUP
+    required_columns = ["Category", "Item", "Frequency", "People"]
+
+    # Completely rebuild the dataframe with only what we need
     if not st.session_state.meal_goals_df.empty:
-        # Keep only the columns we want
-        required_columns = ["Category", "Item", "Frequency", "People"]
-        st.session_state.meal_goals_df = st.session_state.meal_goals_df[required_columns]
+        clean_df = pd.DataFrame()
+        for col in required_columns:
+            if col in st.session_state.meal_goals_df.columns:
+                clean_df[col] = st.session_state.meal_goals_df[col].values
+        st.session_state.meal_goals_df = clean_df
+    else:
+        # If empty, create fresh structure
+        st.session_state.meal_goals_df = pd.DataFrame(columns=required_columns)
 
     edited_goals = st.data_editor(
         st.session_state.meal_goals_df,
@@ -659,8 +667,8 @@ with tab4:
         key="meal_goals_editor"
     )
 
-    # Update state
-    st.session_state.meal_goals_df = edited_goals
+    # Update state with clean dataframe
+    st.session_state.meal_goals_df = edited_goals[required_columns]
 
     st.divider()
 
@@ -681,14 +689,17 @@ with tab4:
         st.session_state.shopping_schedule = None
 
     # Add servings selector for auto-generate
-    col_servings, col_gen, col_plan, col_clear = st.columns([1, 2, 2, 1])
+    col_servings, col_snack_check, col_gen, col_plan, col_clear = st.columns([1, 1.5, 2, 2, 1])
 
     with col_servings:
         default_servings = st.selectbox("Servings", range(1, 11), index=1, key="auto_gen_servings")
 
+    with col_snack_check:
+        always_snack = st.checkbox("Always add snacks", value=False, key="always_add_snacks")
+
     with col_gen:
-        if st.button("Auto-Generate Suggestions", type="secondary", key="auto_generate_week"):
-            with st.spinner("Generating weekly meal plan..."):
+        if st.button("Auto-Generate Remaining Suggestions", type="secondary", key="auto_generate_week"):
+            with st.spinner("Generating meal suggestions for empty slots..."):
                 breakfast_ideas = ["Scrambled Eggs & Toast", "Pancakes", "Oatmeal", "Yogurt Parfait", "Smoothie Bowl"]
                 lunch_ideas = ["Chicken Caesar Salad", "Turkey Sandwich", "Pasta", "Veggie Wrap", "Soup"]
                 dinner_ideas = ["Spaghetti Carbonara", "Beef Tacos", "Grilled Salmon", "Chicken Stir Fry",
@@ -702,19 +713,30 @@ with tab4:
                     lunch = random.choice(lunch_ideas)
                     dinner = random.choice(dinner_ideas)
 
-                    # Add servings notation for meals (not snacks)
-                    if default_servings > 1:
-                        st.session_state.weekly_meals[day]["breakfast"] = f"{breakfast} ({default_servings}p)"
-                        st.session_state.weekly_meals[day]["lunch"] = f"{lunch} ({default_servings}p)"
-                        st.session_state.weekly_meals[day]["dinner"] = f"{dinner} ({default_servings}p)"
-                    else:
-                        st.session_state.weekly_meals[day]["breakfast"] = breakfast
-                        st.session_state.weekly_meals[day]["lunch"] = lunch
-                        st.session_state.weekly_meals[day]["dinner"] = dinner
+                    # Only fill if empty (don't overwrite)
+                    if not st.session_state.weekly_meals[day]["breakfast"].strip():
+                        if default_servings > 1:
+                            st.session_state.weekly_meals[day]["breakfast"] = f"{breakfast} ({default_servings}p)"
+                        else:
+                            st.session_state.weekly_meals[day]["breakfast"] = breakfast
 
-                    # Snacks don't get servings notation
-                    if random.random() > 0.5:
-                        st.session_state.weekly_meals[day]["afternoon_snack"] = random.choice(snack_ideas)
+                    if not st.session_state.weekly_meals[day]["lunch"].strip():
+                        if default_servings > 1:
+                            st.session_state.weekly_meals[day]["lunch"] = f"{lunch} ({default_servings}p)"
+                        else:
+                            st.session_state.weekly_meals[day]["lunch"] = lunch
+
+                    if not st.session_state.weekly_meals[day]["dinner"].strip():
+                        if default_servings > 1:
+                            st.session_state.weekly_meals[day]["dinner"] = f"{dinner} ({default_servings}p)"
+                        else:
+                            st.session_state.weekly_meals[day]["dinner"] = dinner
+
+                    # Snacks - only fill if empty
+                    if not st.session_state.weekly_meals[day]["afternoon_snack"].strip():
+                        # If checkbox is checked, always add. Otherwise 50% chance
+                        if always_snack or random.random() > 0.5:
+                            st.session_state.weekly_meals[day]["afternoon_snack"] = random.choice(snack_ideas)
                 st.rerun()
 
     with col_plan:
@@ -770,7 +792,7 @@ with tab4:
                                 # Try other days if this slot is taken
                                 for backup_day in days:
                                     if backup_day not in selected_days and not \
-                                    st.session_state.weekly_meals[backup_day][slot]:
+                                            st.session_state.weekly_meals[backup_day][slot]:
                                         st.session_state.weekly_meals[backup_day][slot] = meal_text
                                         break
 
@@ -989,6 +1011,7 @@ with tab4:
         },
         height=350
     )
+
 
 # ---- TAB 5: BULK MEAL PREP ----
 with tab5:
