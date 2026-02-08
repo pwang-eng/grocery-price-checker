@@ -387,125 +387,390 @@ with tab3:
 
 # ---- TAB 4: WEEKLY SCHEDULE ----
 with tab4:
-    st.subheader("Weekly Schedule")
-    st.caption("Plan meals for the week to generate a master shopping list.")
+    st.subheader("Weekly Meal & Shopping Planner")
 
-    # CSS for styled inputs
-    st.markdown("""
-        <style>
-        .weekly-input input {
-            height: 100px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+    # Info Box
+    st.info(
+        "💡 **Tip:** You don't need to fill every slot! Leave days or meals blank if you plan to eat out or eat leftovers. The shopping plan will only include what you enter.")
+
+    # 1. FIX: Reset old session state format if detected
+    if 'weekly_meals' in st.session_state and st.session_state.weekly_meals:
+        sample_day = next(iter(st.session_state.weekly_meals))
+        # Check if the structure matches our expected dict-of-dicts
+        if not isinstance(st.session_state.weekly_meals[sample_day], dict):
+            del st.session_state.weekly_meals
+            st.rerun()
+
+    # 2. Initialize new nested session state structure
+    if 'weekly_meals' not in st.session_state:
+        st.session_state.weekly_meals = {
+            day: {
+                "breakfast": "",
+                "morning_snack": "",
+                "lunch": "",
+                "afternoon_snack": "",
+                "dinner": "",
+                "evening_snack": ""
+            } for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         }
-        .weekly-input label { font-weight: bold; }
-        </style>
-    """, unsafe_allow_html=True)
+    if 'shopping_schedule' not in st.session_state:
+        st.session_state.shopping_schedule = None
 
-    mon_col, tue_col, wed_col, thu_col, fri_col, sat_col, sun_col = st.columns(7)
+    # ========== SECTION 1: MEAL PLANNING ==========
 
-    def styled_input(label, key, col):
-        with col:
-            st.markdown(f"<div class='weekly-input'><label>{label}</label></div>", unsafe_allow_html=True)
-            return st.text_area("", key=key, height=100)
+    col_gen, col_clear = st.columns([3, 1])
+    with col_gen:
+        if st.button("Auto-Generate Week", type="primary", key="auto_generate_week"):
+            with st.spinner("Generating weekly meal plan..."):
+                breakfast_ideas = ["Scrambled Eggs & Toast", "Pancakes", "Oatmeal", "Yogurt Parfait", "Smoothie Bowl",
+                                   "French Toast", "Breakfast Burrito"]
+                snack_ideas = ["Apple slices", "Granola bar", "Nuts", "Cheese & crackers", "Fruit", "Protein shake",
+                               "Trail mix"]
+                lunch_ideas = ["Chicken Caesar Salad", "Turkey Sandwich", "Pasta", "Veggie Wrap", "Soup",
+                               "Grilled Cheese", "Quinoa Bowl"]
+                dinner_ideas = ["Spaghetti Carbonara", "Beef Tacos", "Grilled Salmon", "Chicken Stir Fry",
+                                "Veggie Curry", "BBQ Chicken", "Pizza"]
 
-    mon_input = styled_input("Mon", "tab4_mon", mon_col)
-    tue_input = styled_input("Tue", "tab4_tue", tue_col)
-    wed_input = styled_input("Wed", "tab4_wed", wed_col)
-    thu_input = styled_input("Thu", "tab4_thu", thu_col)
-    fri_input = styled_input("Fri", "tab4_fri", fri_col)
-    sat_input = styled_input("Sat", "tab4_sat", sat_col)
-    sun_input = styled_input("Sun", "tab4_sun", sun_col)
+                import random
+
+                for day in st.session_state.weekly_meals:
+                    # Randomly leave some snacks blank (realistic planning)
+                    st.session_state.weekly_meals[day]["breakfast"] = random.choice(breakfast_ideas)
+                    st.session_state.weekly_meals[day]["morning_snack"] = random.choice(
+                        snack_ideas) if random.random() > 0.3 else ""
+                    st.session_state.weekly_meals[day]["lunch"] = random.choice(lunch_ideas)
+                    st.session_state.weekly_meals[day]["afternoon_snack"] = random.choice(
+                        snack_ideas) if random.random() > 0.3 else ""
+                    st.session_state.weekly_meals[day]["dinner"] = random.choice(dinner_ideas)
+                    st.session_state.weekly_meals[day]["evening_snack"] = random.choice(
+                        snack_ideas) if random.random() > 0.5 else ""
+                st.rerun()
+
+    with col_clear:
+        if st.button("Clear All", key="clear_week"):
+            st.session_state.weekly_meals = {
+                day: {
+                    "breakfast": "",
+                    "morning_snack": "",
+                    "lunch": "",
+                    "afternoon_snack": "",
+                    "dinner": "",
+                    "evening_snack": ""
+                } for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            }
+            st.session_state.shopping_schedule = None
+            st.rerun()
+
+    st.write("")
+
+    # Horizontal layout with multiple meals per day
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    cols = st.columns(7)
+
+    meal_types = [
+        ("breakfast", "Breakfast"),
+        ("morning_snack", "Snack"),
+        ("lunch", "Lunch"),
+        ("afternoon_snack", "Snack"),
+        ("dinner", "Dinner"),
+        ("evening_snack", "Snack")
+    ]
+
+    for idx, day in enumerate(days):
+        with cols[idx]:
+            st.markdown(f"**{day[:3]}**")
+
+            for meal_key, meal_label in meal_types:
+                # Use text_area for wrapping, set height to allow 2-3 lines comfortably
+                current_val = st.session_state.weekly_meals[day][meal_key]
+                new_val = st.text_area(
+                    f"{day} {meal_label}",
+                    value=current_val,
+                    key=f"weekly_{day}_{meal_key}",
+                    placeholder=meal_label,
+                    label_visibility="collapsed",
+                    height=68  # Taller box to allow text wrapping
+                )
+                st.session_state.weekly_meals[day][meal_key] = new_val
 
     st.divider()
 
-    if 'results_tab4' not in st.session_state:
-        st.session_state.results_tab4 = None
-    if 'unique_ings_tab4' not in st.session_state:
-        st.session_state.unique_ings_tab4 = None
+    # ========== SECTION 2: SHOPPING OPTIMIZATION ==========
+    st.markdown("### Optimized Shopping Schedule")
 
-    if st.button("Generate Master List", type="primary", key="generate_weekly_list"):
-        meals = [x for x in [mon_input, tue_input, wed_input, thu_input, fri_input, sat_input, sun_input] if x.strip()]
+    if st.button("Generate Shopping Plan", type="primary", key="optimize_shopping"):
+        # Collect all meals from all days
+        all_meals = []
+        for day, meals in st.session_state.weekly_meals.items():
+            for meal_type, meal in meals.items():
+                if meal.strip():
+                    # Add context for portion size
+                    if "snack" in meal_type:
+                        all_meals.append(f"{meal} for 1 person")
+                    else:
+                        all_meals.append(f"{meal} for 2 people")
 
-        if meals:
-            with st.spinner("Processing weekly plan..."):
-                all_ings = []
-                for meal in meals:
-                    all_ings.extend(expand_meal_to_ingredients(meal))
-
-                unique_ings = list(set(all_ings))
-                st.session_state.unique_ings_tab4 = unique_ings
-                st.session_state.results_tab4 = compare_prices(unique_ings)
+        if not all_meals:
+            st.warning("Please add some meals to your weekly plan first.")
         else:
-            st.warning("Enter at least one meal.")
+            with st.spinner("Analyzing ingredients and optimizing shopping trips..."):
+                # Get all ingredients
+                all_ingredients = []
+                for meal in all_meals:
+                    ingredients = expand_meal_to_ingredients(meal)
+                    all_ingredients.extend(ingredients)
 
-    if st.session_state.results_tab4:
-        results = st.session_state.results_tab4
-        unique_ings = st.session_state.unique_ings_tab4
+                # Remove duplicates and count
+                from collections import Counter
 
-        st.success(f"Master list created: {len(unique_ings)} items.")
-        with st.expander("View Shopping List", expanded=True):
-            for ing in unique_ings:
-                st.write(f"• {ing}")
+                ingredient_counts = Counter(all_ingredients)
+                unique_ingredients = list(ingredient_counts.keys())
+
+                # Get price comparison
+                results = compare_prices(unique_ingredients)
+
+                # Categorize items
+                perishable_keywords = ["milk", "eggs", "chicken", "fish", "lettuce", "tomato", "bread", "yogurt",
+                                       "cream", "meat", "beef", "turkey", "cheese", "fruit", "vegetable"]
+                non_perishable_keywords = ["pasta", "rice", "canned", "oil", "flour", "sugar", "salt", "sauce", "beans",
+                                           "cereal", "crackers", "nuts"]
+
+                perishable_items = [item for item in unique_ingredients if
+                                    any(keyword in item.lower() for keyword in perishable_keywords)]
+                non_perishable_items = [item for item in unique_ingredients if
+                                        any(keyword in item.lower() for keyword in non_perishable_keywords)]
+                other_items = [item for item in unique_ingredients if
+                               item not in perishable_items and item not in non_perishable_items]
+
+                st.session_state.shopping_schedule = {
+                    "cheapest_store": results["cheapest_store"],
+                    "total_cost": results["cheapest_total"],
+                    "perishable": perishable_items,
+                    "non_perishable": non_perishable_items,
+                    "other": other_items,
+                    "all_items": unique_ingredients
+                }
+
+    if st.session_state.shopping_schedule:
+        schedule = st.session_state.shopping_schedule
+
+        st.success(f"Optimized shopping plan generated!")
+
+        # Display recommended schedule
+        st.markdown(f"**Recommended Store:** {schedule['cheapest_store']}")
+        st.markdown(f"**Total Weekly Cost:** ${schedule['total_cost']:.2f}")
+
+        st.write("")
+
+        # Shopping trip recommendations
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("#### Trip 1: Monday/Tuesday")
+            st.caption("Non-perishables & shelf-stable items")
+            st.markdown(f"Store: {schedule['cheapest_store']}")
+
+            if schedule['non_perishable']:
+                for item in schedule['non_perishable'][:6]:
+                    st.write(f"• {item}")
+                if len(schedule['non_perishable']) > 6:
+                    st.caption(f"... and {len(schedule['non_perishable']) - 6} more")
+            else:
+                st.info("No non-perishable items")
+
+        with col2:
+            st.markdown("#### Trip 2: Thursday/Friday")
+            st.caption("Fresh produce & perishables")
+            st.markdown(f"Store: {schedule['cheapest_store']}")
+
+            if schedule['perishable']:
+                for item in schedule['perishable'][:6]:
+                    st.write(f"• {item}")
+                if len(schedule['perishable']) > 6:
+                    st.caption(f"... and {len(schedule['perishable']) - 6} more")
+            else:
+                st.info("No perishable items")
 
         st.divider()
 
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"### Best Value: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='color: {GOOSE_GREEN}'>${results['cheapest_total']:.2f}</h2>", unsafe_allow_html=True)
-        with col2:
-            st.metric("Total Savings", f"${results['potential_savings']:.2f}")
+        # Full shopping list
+        with st.expander("View Complete Shopping List"):
+            st.dataframe(
+                pd.DataFrame({
+                    "Item": schedule['all_items'],
+                    "Category": [
+                        "Perishable" if item in schedule['perishable']
+                        else "Non-Perishable" if item in schedule['non_perishable']
+                        else "Other"
+                        for item in schedule['all_items']
+                    ]
+                }),
+                use_container_width=True,
+                hide_index=True
+            )
 
-        # Download Button
-        weekly_text = f"Goose Grocer Weekly Plan\nStore: {results['cheapest_store']}\nTotal: ${results['cheapest_total']:.2f}\n\nShopping List:\n"
-        for ing in unique_ings:
-            weekly_text += f"- [ ] {ing}\n"
+        # Download buttons - Prepare text first
+        meal_plan_text = "WEEKLY MEAL PLAN\n\n"
+        for day, meals in st.session_state.weekly_meals.items():
+            meal_plan_text += f"{day}:\n"
+            for k, v in meals.items():
+                if v: meal_plan_text += f"  {k}: {v}\n"
+            meal_plan_text += "\n"
 
-        st.download_button("Download Weekly List", weekly_text, "weekly_list.txt")
+        shopping_text = f"WEEKLY SHOPPING LIST\nStore: {schedule['cheapest_store']}\nTotal: ${schedule['total_cost']:.2f}\n\n"
+        shopping_text += "TRIP 1 (Monday/Tuesday) - Non-Perishables:\n"
+        for item in schedule['non_perishable']:
+            shopping_text += f"- [ ] {item}\n"
+        shopping_text += "\nTRIP 2 (Thursday/Friday) - Perishables:\n"
+        for item in schedule['perishable']:
+            shopping_text += f"- [ ] {item}\n"
+        if schedule['other']:
+            shopping_text += "\nOther Items:\n"
+            for item in schedule['other']:
+                shopping_text += f"- [ ] {item}\n"
 
+        col_dl1, col_dl2 = st.columns(2)
+        with col_dl1:
+            st.download_button("Download Meal Plan", meal_plan_text, "weekly_meal_plan.txt")
+        with col_dl2:
+            st.download_button("Download Shopping List", shopping_text, "weekly_shopping_list.txt")
+
+    # ========== SECTION 3: VISUAL TIMELINE (Always visible at bottom) ==========
+    st.divider()
+    st.markdown("### 📅 Weekly Schedule View")
+
+    # Create a DataFrame for the schedule
+    schedule_data = []
+    times = ["08:00 AM", "10:30 AM", "12:30 PM", "03:30 PM", "06:30 PM", "09:00 PM"]
+    meal_labels = ["Breakfast", "Snack", "Lunch", "Snack", "Dinner", "Snack"]
+    keys = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"]
+
+    for i, time in enumerate(times):
+        row = {"Time": f"{time}\n{meal_labels[i]}"}
+        for day in days:
+            # Safely get value, defaulting to empty string if missing
+            meal = st.session_state.weekly_meals[day].get(keys[i], "")
+            row[day] = meal if meal else ""
+        schedule_data.append(row)
+
+    schedule_df = pd.DataFrame(schedule_data)
+
+    # Display as a styled table
+    st.dataframe(
+        schedule_df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Time": st.column_config.TextColumn(
+                "Time",
+                width="medium",
+                disabled=True
+            ),
+            "Monday": st.column_config.TextColumn("Mon", width="small"),
+            "Tuesday": st.column_config.TextColumn("Tue", width="small"),
+            "Wednesday": st.column_config.TextColumn("Wed", width="small"),
+            "Thursday": st.column_config.TextColumn("Thu", width="small"),
+            "Friday": st.column_config.TextColumn("Fri", width="small"),
+            "Saturday": st.column_config.TextColumn("Sat", width="small"),
+            "Sunday": st.column_config.TextColumn("Sun", width="small"),
+        },
+        height=350  # Increased height
+    )
 
 # ---- TAB 5: BULK MEAL PREP ----
 with tab5:
     st.subheader("Bulk Meal Prep")
     st.caption("Cost analysis for batch cooking and meal preparation.")
 
-    prep_type = st.radio("Prep Mode:", ["Gym Meal Prep", "Family Batch Cooking"], horizontal=True)
+    prep_type = st.radio("Prep Mode:", ["Gym Meal Prep", "Custom Batch Prep"], horizontal=True)
     st.divider()
 
     if prep_type == "Gym Meal Prep":
         st.write("High-protein meal plan generation.")
-        days = st.slider("Number of Days", 3, 7, 5)
-        meals_per_day = st.slider("Meals per Day", 1, 5, 3)
+
+        col_sets, col_goal = st.columns(2)
+        with col_sets:
+            days = st.slider("Number of Days", 3, 7, 5)
+        with col_goal:
+            diet_goal = st.selectbox("Goal", ["Maintenance / Lean Bulk", "Cut / Fat Loss"])
 
         if st.button("Generate Plan", type="primary", key="generate_bulk_gym"):
-            base_ings = ["chicken breast", "brown rice", "broccoli", "eggs", "oats",
-                         "protein powder", "sweet potato", "greek yogurt", "spinach"]
 
-            with st.spinner("Calculating costs..."):
+            # Define menus based on goal
+            if diet_goal == "Maintenance / Lean Bulk":
+                plan_name = "Lean Bulk Builder"
+                base_ings = ["chicken breast", "ground beef", "brown rice", "pasta", "broccoli",
+                             "eggs", "oats", "protein powder", "bananas", "peanut butter"]
+
+                menu = {
+                    "Breakfast": "Proats (Oats + Protein Powder) & 2 Eggs",
+                    "Lunch": "Chicken Breast, Brown Rice & Broccoli",
+                    "Dinner": "Ground Beef Pasta with Tomato Sauce",
+                    "Snacks": "Banana & Peanut Butter or Protein Shake"
+                }
+            else:
+                plan_name = "Rapid Fat Loss Cut"
+                base_ings = ["chicken breast", "white fish", "sweet potato", "spinach", "asparagus",
+                             "egg whites", "berries", "protein powder", "greek yogurt"]
+
+                menu = {
+                    "Breakfast": "Egg White Omelet with Spinach",
+                    "Lunch": "Grilled Chicken & Asparagus",
+                    "Dinner": "White Fish & Sweet Potato",
+                    "Snacks": "Greek Yogurt with Berries"
+                }
+
+            with st.spinner(f"Calculating costs for {plan_name}..."):
                 results = compare_prices(base_ings)
 
-            st.success(f"Plan generated for {days * meals_per_day} meals.")
+            st.success(f"Generated: {plan_name} ({days} Days)")
+
+            # --- NEW: Meal Breakdown Display ---
+            st.markdown("### 🍽️ The Menu")
+            m1, m2, m3, m4 = st.columns(4)
+            with m1:
+                st.markdown("**Breakfast**")
+                st.info(menu["Breakfast"])
+            with m2:
+                st.markdown("**Lunch**")
+                st.info(menu["Lunch"])
+            with m3:
+                st.markdown("**Dinner**")
+                st.info(menu["Dinner"])
+            with m4:
+                st.markdown("**Snacks**")
+                st.info(menu["Snacks"])
+            # -----------------------------------
+
+            st.divider()
+
             c1, c2, c3 = st.columns(3)
             with c1:
-                st.metric("Total Cost", f"${results['cheapest_total']:.2f}")
+                st.metric("Total Grocery Cost", f"${results['cheapest_total']:.2f}")
             with c2:
                 cost_per_day = results['cheapest_total'] / days
                 st.metric("Cost / Day", f"${cost_per_day:.2f}")
             with c3:
-                cost_per_meal = results['cheapest_total'] / (days * meals_per_day)
-                st.metric("Cost / Meal", f"${cost_per_meal:.2f}")
+                # Approx 3 main meals + 1 snack = 4 eating occasions
+                cost_per_meal = results['cheapest_total'] / (days * 4)
+                st.metric("Cost / Meal (Approx)", f"${cost_per_meal:.2f}")
 
-            st.markdown(f"### Recommended Store: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
+            st.markdown(f"### Recommended Store: <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>",
+                        unsafe_allow_html=True)
 
             # Download
-            gym_text = f"Goose Grocer Gym Prep\nTarget: {days} days, {meals_per_day} meals/day\nStore: {results['cheapest_store']}\nTotal: ${results['cheapest_total']:.2f}\n\nList:\n"
+            gym_text = f"Goose Grocer {plan_name}\nTarget: {days} days\nStore: {results['cheapest_store']}\nTotal: ${results['cheapest_total']:.2f}\n\n"
+            gym_text += "MENU:\n"
+            for k, v in menu.items():
+                gym_text += f"{k}: {v}\n"
+            gym_text += "\nSHOPPING LIST:\n"
             for ing in base_ings:
                 gym_text += f"- [ ] {ing}\n"
+
             st.download_button("Download Prep List", gym_text, "gym_prep.txt")
 
     else:
-        # Session State for Batch
+        # Custom Batch Prep Logic
         if 'results_tab5' not in st.session_state:
             st.session_state.results_tab5 = None
         if 'ingredients_tab5' not in st.session_state:
@@ -514,18 +779,23 @@ with tab5:
             st.session_state.recipe_tab5 = ""
 
         st.write("Batch cooking analysis.")
-        recipe = st.text_input("Recipe Name", placeholder="e.g., Vegetarian Chili", key="bulk_recipe")
+
+        recipe_query = st.text_input(
+            "What do you want to cook?",
+            placeholder="e.g., 'Meals with Mac and Cheese' or 'Vegetarian Chili'",
+            key="bulk_recipe"
+        )
         servings = st.number_input("Servings", 4, 50, 8, key="bulk_servings")
 
         if st.button("Analyze Cost", key="analyze_bulk"):
-            if recipe:
+            if recipe_query:
                 with st.spinner("Analyzing ingredients..."):
-                    ings = expand_meal_to_ingredients(f"{recipe} for {servings} servings")
+                    ings = expand_meal_to_ingredients(f"{recipe_query} for {servings} servings")
                     st.session_state.ingredients_tab5 = ings
-                    st.session_state.recipe_tab5 = recipe
+                    st.session_state.recipe_tab5 = recipe_query
                     st.session_state.results_tab5 = compare_prices(ings)
             else:
-                st.warning("Please enter a recipe name.")
+                st.warning("Please describe what you want to cook.")
 
         if st.session_state.results_tab5:
             results = st.session_state.results_tab5
@@ -537,8 +807,9 @@ with tab5:
 
             st.divider()
             st.metric("Total Batch Cost", f"${results['cheapest_total']:.2f}")
-            st.caption(f"Cost per serving: ${results['cheapest_total']/servings:.2f}")
-            st.markdown(f"### Best Price at <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>", unsafe_allow_html=True)
+            st.caption(f"Cost per serving: ${results['cheapest_total'] / servings:.2f}")
+            st.markdown(f"### Best Price at <span style='color:{GOOSE_GREEN}'>{results['cheapest_store']}</span>",
+                        unsafe_allow_html=True)
 
             col_dl, col_save = st.columns(2)
             with col_dl:
@@ -704,6 +975,57 @@ with tab6:
                 st.caption(f"Showing {len(display_df)} products")
 
                 st.dataframe(styled, use_container_width=True, hide_index=True, height=600)
+
+# ---- TAB 7: RECIPE BOOK ----
+with tab7:
+    st.subheader("Your Recipe Book")
+
+    # NEW: Requested Info Box
+    st.info(
+        "📖 **How it works:** Save your favorite generated meal plans and bulk prep calculations here. This allows you to quickly re-access ingredient lists and track estimated costs without re-entering details.")
+
+    recipes_df = get_saved_recipes()
+
+    if not recipes_df.empty:
+        # Display recipes in a grid or list
+        for idx, row in recipes_df.iterrows():
+            with st.expander(f"🍲 {row['recipe_name']}"):
+                st.caption(f"Added on: {row['created_at']}")
+
+                col_ing, col_instr = st.columns([1, 2])
+
+                with col_ing:
+                    st.markdown("**Ingredients**")
+                    # Assuming ingredients are stored as a comma-separated string or list in DB
+                    # Adjust depending on your actual DB format
+                    ingredients_list = row['ingredients']
+                    if isinstance(ingredients_list, str):
+                        # Simple cleanup if it's a raw string representation
+                        ingredients_list = ingredients_list.replace("[", "").replace("]", "").replace("'", "").split(
+                            ",")
+
+                    for ing in ingredients_list:
+                        st.write(f"• {ing.strip()}")
+
+                with col_instr:
+                    st.markdown("**Notes / Instructions**")
+                    st.write(row['instructions'])
+
+                st.divider()
+                if st.button("Re-Calculate Price", key=f"recalc_{row['id']}"):
+                    st.session_state['grocery_input'] = "\n".join([i.strip() for i in ingredients_list])
+                    st.switch_page("app.py")  # Or direct user to Tab 2
+                    st.toast("Ingredients loaded into Grocery List calculator!")
+    else:
+        st.markdown(
+            """
+            <div style='text-align: center; color: gray; padding: 50px;'>
+                <h3>No recipes saved yet</h3>
+                <p>Go to the <b>Meal Planner</b> or <b>Bulk Prep</b> tabs to generate and save your first recipe!</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 # ---------------------------------------------------------------------------
 # FOOTER
